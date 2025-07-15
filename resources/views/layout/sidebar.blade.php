@@ -56,7 +56,67 @@
                             </a>
                         </li>
 
-                        
+                        @if(Auth::check() && Auth::user()->role === 'admin')
+                            <li class="sidebar-title">Admin</li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('admin.home') }}" class='sidebar-link'>
+                                    <i class="bi bi-house-door"></i>
+                                    <span>Home</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item has-sub">
+                                <a href="#" class='sidebar-link'>
+                                    <i class="bi bi-archive"></i>
+                                    <span>Master</span>
+                                </a>
+                                <ul class="submenu">
+                                    <li class="submenu-item"><a href="{{ route('admin.lokasi') }}">Lokasi Magang</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.user') }}">User</a></li>
+                                </ul>
+                            </li>
+                            <li class="sidebar-item has-sub">
+                                <a href="#" class='sidebar-link'>
+                                    <i class="bi bi-file-earmark-plus"></i>
+                                    <span>Pengajuan Magang</span>
+                                </a>
+                                <ul class="submenu">
+                                    <li class="submenu-item"><a href="{{ route('admin.pengajuan.link') }}">Link Pengajuan</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.pengajuan.daftar') }}">Daftar Pengajuan</a></li>
+                                </ul>
+                            </li>
+                            <li class="sidebar-item has-sub">
+                                <a href="#" class='sidebar-link'>
+                                    <i class="bi bi-check2-square"></i>
+                                    <span>Penerimaan Magang</span>
+                                </a>
+                                <ul class="submenu">
+                                    <li class="submenu-item"><a href="{{ route('admin.penerimaan.link') }}">Link Penerimaan</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.penerimaan.daftar') }}">Daftar Penerimaan</a></li>
+                                </ul>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('admin.pelaksanaan') }}" class='sidebar-link'>
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span>Pelaksanaan Magang</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="{{ route('admin.hasil') }}" class='sidebar-link'>
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <span>Hasil Magang</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item has-sub">
+                                <a href="#" class='sidebar-link'>
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Penelitian</span>
+                                </a>
+                                <ul class="submenu">
+                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.pengajuan') }}">Daftar Pengajuan</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.penjadwalan') }}">Penjadwalan</a></li>
+                                </ul>
+                            </li>
+                        @endif
 
 
                         <!-- <li class="sidebar-title">Menu</li>

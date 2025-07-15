@@ -31,6 +31,10 @@
                             <th>No</th>
                             <th>Nama</th>
                             <th>Status</th>
+                            <th>Role</th>
+                            @if(Auth::user()->role === 'admin')
+                            <th>Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -43,6 +47,22 @@
                                     {{ $users[$i]->status == 1 ? 'Aktif' : 'Inaktif' }}
                                 </span>
                             </td>
+                            <td>
+                                @if(strtolower($users[$i]->role) == 'admin')
+                                    <span class="badge bg-danger">Admin</span>
+                                @else
+                                    <span class="badge bg-success">Magang</span>
+                                @endif
+                            </td>
+                            @if(Auth::user()->role === 'admin')
+                            <td>
+                                <a href="{{ route('be.um.edit.page', $users[$i]->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                <form method="POST" action="{{ route('be.um.delete', $users[$i]->id) }}" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger btn-sm" {{ $users[$i]->status == 1 ? 'disabled' : '' }} onclick="return confirm('Yakin ingin menghapus pengguna ini?')">Delete</button>
+                                </form>
+                            </td>
+                            @endif
                         </tr>
                         @endfor
                     </tbody>
@@ -50,6 +70,7 @@
             </div>
         </div>
 
+        @if(Auth::user()->role === 'admin')
         <div class="card">
             <div class="card-header">
                 <h4 class="card-title">Tambah Pengguna</h4>
@@ -63,7 +84,6 @@
                                 <div class="col-md-2">
                                     <label>Username</label>
                                 </div>
-                                
                                 <div class="col-md-10 form-group">
                                     <input type="text" id="username" class="form-control"
                                     name="username" placeholder="Username">
@@ -119,6 +139,15 @@
                                     <input type="text" id="institution" class="form-control"
                                     name="institution" placeholder="Institusi">
                                 </div>
+                                <div class="col-md-2">
+                                    <label>Role</label>
+                                </div>
+                                <div class="col-md-10 form-group">
+                                    <select id="role" class="form-control" name="role">
+                                        <option value="magang">Magang</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
                                 <div class="col-sm-12 d-flex justify-content-end">
                                     <button type="submit"
                                     class="btn btn-primary me-1 mb-1">Simpan</button>
@@ -131,7 +160,16 @@
                 </div>
             </div>
         </div>
+        @endif
 
     </section>
 
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove Edit User Modal and related JS
+    });
+</script>
 @endsection
