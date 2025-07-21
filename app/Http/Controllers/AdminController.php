@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 class AdminController extends Controller
 {
     public function home() { return view('admin.home'); }
-    public function lokasi() { return view('admin.lokasi'); }
     public function user() { return view('admin.user'); }
     public function pengajuanLink() { return view('admin.pengajuan_link'); }
     public function pengajuanDaftar() { return view('admin.pengajuan_daftar'); }

@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LokasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,8 +68,18 @@ Route::post('/set-pass-save',[SettingController::class, 'changePasswordSave'])->
 /* Admin routes */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/home', [AdminController::class, 'home'])->name('home');
-    Route::get('/master/lokasi', [AdminController::class, 'lokasi'])->name('lokasi');
-    Route::get('/master/user', [AdminController::class, 'user'])->name('user');
+
+    Route::prefix('master')->name('master.')->group(function () {
+        Route::get('/user', [AdminController::class, 'user'])->name('user');
+        
+        Route::get('lokasi', [LokasiController::class, 'index'])->name('lokasi.index');
+        Route::get('lokasi/create', [LokasiController::class, 'create'])->name('lokasi.create');
+        Route::post('lokasi', [LokasiController::class, 'store'])->name('lokasi.store');
+        Route::get('lokasi/{id}/edit', [LokasiController::class, 'edit'])->name('lokasi.edit');
+        Route::put('lokasi/{id}', [LokasiController::class, 'update'])->name('lokasi.update');
+        Route::delete('lokasi/{id}', [LokasiController::class, 'destroy'])->name('lokasi.destroy');
+    });
+
     Route::get('/pengajuan/link', [AdminController::class, 'pengajuanLink'])->name('pengajuan.link');
     Route::get('/pengajuan/daftar', [AdminController::class, 'pengajuanDaftar'])->name('pengajuan.daftar');
     Route::get('/penerimaan/link', [AdminController::class, 'penerimaanLink'])->name('penerimaan.link');

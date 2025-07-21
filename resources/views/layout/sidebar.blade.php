@@ -70,8 +70,8 @@
                                     <span>Master</span>
                                 </a>
                                 <ul class="submenu">
-                                    <li class="submenu-item"><a href="{{ route('admin.lokasi') }}">Lokasi Magang</a></li>
-                                    <li class="submenu-item"><a href="{{ route('admin.user') }}">User</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.master.lokasi.index') }}">Lokasi Magang</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.master.user') }}">User</a></li>
                                 </ul>
                             </li>
                             <li class="sidebar-item has-sub">
