@@ -80,7 +80,11 @@
             </div>
             <div class="col-lg-7 d-none d-lg-block">
                 <div id="auth-right">
-
+                    <div id="auth-right">
+                        <div class="d-flex justify-content-center align-items-center h-100">
+                            <a href="{{ route('pengajuan.create') }}" class="btn btn-outline-light btn-lg">Ajukan Magang</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

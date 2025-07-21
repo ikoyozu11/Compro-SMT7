@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PengajuanMagangController;
 
 /*
 |--------------------------------------------------------------------------
@@ -85,3 +86,8 @@ Route::get('/', function () {
     }
     return redirect()->route('login');
 });
+
+/* Pengajuan routes */
+Route::get('/pengajuan', [PengajuanMagangController::class, 'create'])->name('pengajuan.create');
+Route::post('/pengajuan', [PengajuanMagangController::class, 'store'])->name('pengajuan.store');
+Route::get('/pengajuan-magang', [PengajuanMagangController::class, 'create'])->name('pengajuan.create');
