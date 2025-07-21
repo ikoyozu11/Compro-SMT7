@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\PengajuanMagang;
-use App\Models\LokasiMagang;
+use App\Models\Lokasi;
 use Illuminate\Http\Request;
 
 class PengajuanMagangController extends Controller
 {
     public function create()
     {
-        $lokasi = LokasiMagang::all();
+        $lokasi = Lokasi::all();
         return view('pengajuan.create', compact('lokasi'));
     }
 
