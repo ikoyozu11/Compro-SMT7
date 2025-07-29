@@ -28,6 +28,10 @@ class DatabaseSeeder extends Seeder
             'role' => 'magang',
             'status' => 1
         ]);
-        $this->call(PengajuanPenelitianSeeder::class);
+        $this->call([
+        PengajuanPenelitianSeeder::class,
+        LokasiSeeder::class,
+        PengajuanMagangSeeder::class,
+    ]);
     }
 }
