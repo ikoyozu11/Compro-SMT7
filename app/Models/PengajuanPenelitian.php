@@ -21,5 +21,24 @@ class PengajuanPenelitian extends Model
         'proposal',
         'daftar_pertanyaan',
         'ktp',
+        'status',
+        'tanggal_pelaksanaan',
+        'surat_selesai',
+        'keterangan_penolakan',
     ];
+
+    protected $casts = [
+        'tanggal_pelaksanaan' => 'date',
+    ];
+
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            'Pengajuan' => 'badge bg-warning',
+            'Diterima' => 'badge bg-success',
+            'Ditolak' => 'badge bg-danger',
+        ];
+        
+        return $badges[$this->status] ?? 'badge bg-secondary';
+    }
 } 

@@ -13,16 +13,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Tambahkan admin jika belum ada
-        if (!User::where('username', 'admin')->exists()) {
-            User::create([
-                'username' => 'admin',
-                'password' => Hash::make('admin123'),
-                'name' => 'Admin',
-                'role' => 'admin',
-                'status' => 1
-            ]);
-        }
+        // Jalankan seeder lainnya
+        $this->call([
+            AdminSeeder::class,
+            PengajuanPenelitianSeeder::class,
+            LokasiSeeder::class,
+            PengajuanMagangSeeder::class,
+        ]);
 
         // Tambahkan user magang jika belum ada
         if (!User::where('username', 'kanonfueee')->exists()) {

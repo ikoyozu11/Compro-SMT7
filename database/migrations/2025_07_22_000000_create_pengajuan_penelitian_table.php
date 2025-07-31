@@ -18,6 +18,10 @@ return new class extends Migration {
             $table->string('proposal'); // path file
             $table->string('daftar_pertanyaan'); // path file
             $table->string('ktp'); // path file
+            $table->enum('status', ['Pengajuan', 'Diterima', 'Ditolak'])->default('Pengajuan');
+            $table->date('tanggal_pelaksanaan')->nullable();
+            $table->string('surat_selesai')->nullable(); // path file
+            $table->text('keterangan_penolakan')->nullable();
             $table->timestamps();
         });
     }

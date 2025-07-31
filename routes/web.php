@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\PengajuanMagangController;
+use App\Http\Controllers\PengajuanPenelitianController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -90,8 +91,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/penerimaan/{id}', [PengajuanMagangController::class, 'destroy'])->name('penerimaan.destroy');
     Route::get('/pelaksanaan', [AdminController::class, 'pelaksanaan'])->name('pelaksanaan');
     Route::get('/hasil', [AdminController::class, 'hasil'])->name('hasil');
-    Route::get('/penelitian/pengajuan', [AdminController::class, 'penelitianPengajuan'])->name('penelitian.pengajuan');
-    Route::get('/penelitian/penjadwalan', [AdminController::class, 'penelitianPenjadwalan'])->name('penelitian.penjadwalan');
+    // Penelitian routes
+    Route::get('/penelitian/link', [PengajuanPenelitianController::class, 'generateLink'])->name('penelitian.link');
+    Route::get('/penelitian', [PengajuanPenelitianController::class, 'index'])->name('penelitian.index');
+    Route::get('/penelitian/{id}', [PengajuanPenelitianController::class, 'show'])->name('penelitian.show');
+    Route::post('/penelitian/{id}/update-status', [PengajuanPenelitianController::class, 'updateStatus'])->name('penelitian.update-status');
+    Route::get('/penelitian/{id}/download/{fileType}', [PengajuanPenelitianController::class, 'downloadFile'])->name('penelitian.download');
 });
 
 Route::get('/', function () {

@@ -112,8 +112,8 @@
                                     <span>Penelitian</span>
                                 </a>
                                 <ul class="submenu">
-                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.pengajuan') }}">Daftar Pengajuan</a></li>
-                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.penjadwalan') }}">Penjadwalan</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.link') }}">Generate Link</a></li>
+                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.index') }}">Daftar Penelitian</a></li>
                                 </ul>
                             </li>
                         @endif
