@@ -13,24 +13,24 @@ class SettingController extends Controller
 
 	public function changePasswordSave(Request $request){
 
-		// Validate the incoming request data
+		        // Validate the incoming request data
         $validatedData = $request->validate([
             'old-password' => 'required|string',
             'password' => [
 					        'required',
 					        'string',
-					        'min:8',              // Minimum 8 characters
-					        'regex:/[a-z]/',      // Must contain at least one lowercase letter
-					        'regex:/[A-Z]/',      // Must contain at least one uppercase letter
+					        'min:6',              // Minimum 6 characters
+					        'regex:/[a-zA-Z]/',   // Must contain at least one letter
 					        'regex:/[0-9]/',      // Must contain at least one digit
+					        'regex:/[^a-zA-Z0-9]/', // Must contain at least one symbol
 					        'confirmed'
 					    ],
             'password_confirmation' => 'required|string'
         ], [
             'old-password.required' => 'Password lama tidak boleh kosong',
             'password.required' => 'Password baru tidak boleh kosong',
-		    'password.min' => 'Password minimal 8 karakter',
-    		'password.regex' => 'Password harus memiliki minimal satu huruf besar, satu huruf kecil, dan satu angka',
+		    'password.min' => 'Password minimal 6 karakter',
+    		'password.regex' => 'Password harus memiliki minimal satu huruf, satu angka, dan satu simbol',
     		'password.confirmed' => 'Konfirmasi password baru tidak cocok',
             'password_confirmation.required' => 'Konfirmasi password baru tidak boleh kosong'
         ]);

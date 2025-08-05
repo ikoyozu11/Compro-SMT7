@@ -95,8 +95,9 @@
                                     <label>Password</label>
                                 </div>
                                 <div class="col-md-10 form-group">
-                                    <input type="text" id="password" class="form-control"
+                                    <input type="password" id="password" class="form-control"
                                     name="password" placeholder="Password">
+                                    <small class="form-text text-muted">Password minimal 6 karakter dengan huruf, angka, dan simbol</small>
                                     @error('password')
                                         <div style="color: red;">* {{ $message }}</div>
                                     @enderror
@@ -131,6 +132,10 @@
                                 <div class="col-md-10 form-group">
                                     <input type="text" id="phone" class="form-control"
                                     name="phone" placeholder="Telepon">
+                                    <small class="form-text text-muted">Nomor telepon hanya boleh berisi angka.</small>
+                                    @error('phone')
+                                        <div style="color: red;">* {{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-2">
                                     <label>Institusi</label>
@@ -168,6 +173,10 @@
 
 @section('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove Edit User Modal and related JS
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         // Remove Edit User Modal and related JS
     });

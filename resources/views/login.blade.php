@@ -55,9 +55,12 @@
                                 <div style="color: red;">* {{ $message }}</div>
                             @enderror
 
-                            <input type="password" class="form-control form-control-xl" placeholder="Password" name="kata_sandi">
+                            <input type="password" class="form-control form-control-xl" placeholder="Password" name="kata_sandi" id="password-field">
                             <div class="form-control-icon">
                                 <i class="bi bi-shield-lock"></i>
+                            </div>
+                            <div class="form-control-icon" style="right: 0; left: auto; cursor: pointer;" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="password-toggle"></i>
                             </div>
                         </div>
 
@@ -91,6 +94,28 @@
         </div>
 
     </div>
+
+    <script>
+            function togglePassword() {
+        const passwordField = document.getElementById('password-field');
+        const passwordToggle = document.getElementById('password-toggle');
+        
+        if (!passwordField || !passwordToggle) {
+            console.error('Password field or toggle button not found');
+            return;
+        }
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            passwordToggle.classList.remove('bi-eye');
+            passwordToggle.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            passwordToggle.classList.remove('bi-eye-slash');
+            passwordToggle.classList.add('bi-eye');
+        }
+    }
+    </script>
 </body>
 
 </html>

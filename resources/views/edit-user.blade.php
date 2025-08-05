@@ -3,10 +3,9 @@
 @section('title', 'Edit Pengguna')
 
 @section('content')
-<div class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <h4>Edit Pengguna</h4>
+            <h4 class="card-title" style="margin: 0; padding: 0; font-size: 1.2rem; font-weight: 700;">Edit Pengguna</h4>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('be.um.edit', $user->id) }}">
@@ -27,7 +26,8 @@
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password (kosongkan jika tidak diubah)</label>
-                    <input type="text" class="form-control" id="password" name="password">
+                    <input type="password" class="form-control" id="password" name="password" style="background-image: none !important; background: white !important; position: relative !important; background-repeat: no-repeat !important; background-position: unset !important; padding-right: 12px !important;">
+                    <small class="form-text text-muted">Password minimal 6 karakter dengan huruf, angka, dan simbol</small>
                 </div>
                 <div class="mb-3">
                     <label for="date-birth" class="form-label">Tgl Lahir</label>
@@ -40,6 +40,10 @@
                 <div class="mb-3">
                     <label for="phone" class="form-label">Telepon</label>
                     <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone', $user->phone) }}">
+                    <small class="form-text text-muted">Nomor telepon hanya boleh berisi angka.</small>
+                    @error('phone')
+                        <div style="color: red;">* {{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="mb-3">
                     <label for="institution" class="form-label">Institusi</label>
@@ -64,5 +68,21 @@
             </form>
         </div>
     </div>
-</div>
-@endsection 
+@endsection
+
+@section('scripts')
+<script>
+    // Ensure password field is clean
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordField = document.getElementById('password');
+        if (passwordField) {
+            passwordField.style.backgroundImage = 'none';
+            passwordField.style.background = 'white';
+            passwordField.style.position = 'relative';
+            passwordField.style.backgroundRepeat = 'no-repeat';
+            passwordField.style.backgroundPosition = 'unset';
+            passwordField.style.paddingRight = '12px';
+        }
+    });
+</script>
+@endsection

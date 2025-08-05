@@ -22,13 +22,32 @@ class UserController extends Controller
         // Validate the incoming request data
         $validatedData = $request->validate([
             'username' => 'required|string',
-            'password' => 'required|string',
+            'password' => [
+                'required',
+                'string',
+                'min:6',              // Minimum 6 characters
+                'regex:/[a-zA-Z]/',   // Must contain at least one letter
+                'regex:/[0-9]/',      // Must contain at least one digit
+                'regex:/[^a-zA-Z0-9]/' // Must contain at least one symbol
+            ],
             'name' => 'required|string',
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^[0-9]+$/',   // Only numbers allowed
+                'min:11',             // Minimum 11 digits
+                'max:12'              // Maximum 12 digits
+            ],
             'role' => 'required|in:admin,magang'
         ], [
             'username.required' => 'Username tidak boleh kosong',
             'password.required' => 'Password tidak boleh kosong',
+            'password.min' => 'Password minimal 6 karakter',
+            'password.regex' => 'Password harus memiliki minimal satu huruf, satu angka, dan satu simbol',
             'name.required' => 'Nama tidak boleh kosong',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka',
+            'phone.min' => 'Nomor telepon minimal 11 digit',
+            'phone.max' => 'Nomor telepon maksimal 12 digit',
             'role.required' => 'Role harus dipilih',
         ]);
 
@@ -67,15 +86,44 @@ class UserController extends Controller
         if (auth()->user()->role !== 'admin') {
             abort(403);
         }
-        $validatedData = $request->validate([
+        $validationRules = [
             'username' => 'required|string',
             'name' => 'required|string',
+            'phone' => [
+                'nullable',
+                'string',
+                'regex:/^[0-9]+$/',   // Only numbers allowed
+                'min:11',             // Minimum 11 digits
+                'max:12'              // Maximum 12 digits
+            ],
             'role' => 'required|in:admin,magang',
-        ], [
+        ];
+
+        $validationMessages = [
             'username.required' => 'Username tidak boleh kosong',
             'name.required' => 'Nama tidak boleh kosong',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka',
+            'phone.min' => 'Nomor telepon minimal 11 digit',
+            'phone.max' => 'Nomor telepon maksimal 12 digit',
             'role.required' => 'Role harus dipilih',
-        ]);
+        ];
+
+        // Add password validation if password is provided
+        if ($request->filled('password')) {
+            $validationRules['password'] = [
+                'required',
+                'string',
+                'min:6',              // Minimum 6 characters
+                'regex:/[a-zA-Z]/',   // Must contain at least one letter
+                'regex:/[0-9]/',      // Must contain at least one digit
+                'regex:/[^a-zA-Z0-9]/' // Must contain at least one symbol
+            ];
+            $validationMessages['password.required'] = 'Password tidak boleh kosong';
+            $validationMessages['password.min'] = 'Password minimal 6 karakter';
+            $validationMessages['password.regex'] = 'Password harus memiliki minimal satu huruf, satu angka, dan satu simbol';
+        }
+
+        $validatedData = $request->validate($validationRules, $validationMessages);
 
         $user = User::findOrFail($id);
         $user->username = $validatedData['username'];
