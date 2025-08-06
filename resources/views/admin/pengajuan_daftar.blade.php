@@ -16,22 +16,26 @@
         </div>
         @endforeach
     </div>
+        <div class="d-flex justify-content-between align-items-center mb-3" >
     {{-- Dropdown Filter Status --}}
-    <form method="get" class="mb-3">
-        <div class="row g-2 align-items-center">
-            <div class="col-auto">
-                <label for="status" class="col-form-label">Filter Status:</label>
-            </div>
-            <div class="col-auto">
-                <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-                    <option value="pengajuan" {{ $status=='pengajuan'?'selected':'' }}>Pengajuan</option>
-                    <option value="diproses" {{ $status=='diproses'?'selected':'' }}>Diproses</option>
-                    <option value="ditolak" {{ $status=='ditolak'?'selected':'' }}>Ditolak</option>
-                    <option value="all" {{ $status=='all'?'selected':'' }}>Semua</option>
-                </select>
-            </div>
-        </div>
-    </form>
+    <div>
+        <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+            <option value="diproses" {{ $status=='diproses'?'selected':'' }}>Diproses</option>
+            <option value="ditolak" {{ $status=='ditolak'?'selected':'' }}>Ditolak</option>
+            <option value="all" {{ $status=='all'?'selected':'' }}>Semua</option>
+        </select>
+    </div>
+
+    {{-- Tombol Urutkan --}}
+    @php
+        $currentSort = request('sort', 'desc');
+        $nextSort = $currentSort === 'desc' ? 'asc' : 'desc';
+        $sortLabel = $currentSort === 'desc' ? 'Urutkan: Terbaru' : 'Urutkan: Lama';
+    @endphp
+    <a href="{{ request()->fullUrlWithQuery(['sort' => $nextSort]) }}" class="btn btn-outline-primary ms-2">
+        {{ $sortLabel }}
+    </a>
+</div>
     {{-- Tabel Pengajuan --}}
     <table class="table table-bordered">
         <thead>
