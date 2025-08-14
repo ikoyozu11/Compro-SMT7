@@ -99,6 +99,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/penerimaan/{id}', [App\Http\Controllers\PenerimaanController::class, 'destroy'])->name('penerimaan.destroy');
     Route::post('/penerimaan/{id}/update-status', [App\Http\Controllers\PenerimaanController::class, 'updateStatus'])->name('penerimaan.update-status');
 
+    // Peserta
+    Route::get('/peserta', [AdminController::class, 'peserta'])->name('peserta');
+
     Route::get('/pelaksanaan', [AdminController::class, 'pelaksanaan'])->name('pelaksanaan');
     Route::get('/hasil', [App\Http\Controllers\HasilMagangController::class, 'index'])->name('hasil');
     Route::post('/hasil', [App\Http\Controllers\HasilMagangController::class, 'store'])->name('hasil.store');

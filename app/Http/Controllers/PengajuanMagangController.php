@@ -168,6 +168,7 @@ class PengajuanMagangController extends Controller
     public function daftarPengajuan(Request $request)
     {
         $status = $request->get('status', 'all');
+        $sort = $request->get('sort', 'desc'); // Ambil parameter sort
         $query = PengajuanMagang::query();
         
         // DEBUG: Let's see what's actually in the database
@@ -181,7 +182,8 @@ class PengajuanMagangController extends Controller
             $query->whereIn('status', ['pengajuan', 'diproses', 'ditolak']);
         }
         
-        $pengajuan = $query->orderBy('created_at', 'desc')->get();
+        // Terapkan sorting berdasarkan parameter sort
+        $pengajuan = $query->orderBy('created_at', $sort)->get();
         
         // DEBUG: Let's see what the query returns
         \Log::info('Query status: ' . $status);
