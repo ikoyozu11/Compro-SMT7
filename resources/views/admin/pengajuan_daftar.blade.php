@@ -37,7 +37,6 @@
     <form method="GET" action="{{ route('admin.pengajuan.daftar') }}" id="filterForm">
         <div class="d-flex align-items-center">
             <select name="status" id="status" class="form-select me-2" onchange="this.form.submit()">
-                <option value="pengajuan" {{ $status=='pengajuan'?'selected':'' }}>Pengajuan</option>
                 <option value="diproses" {{ $status=='diproses'?'selected':'' }}>Diproses</option>
                 <option value="ditolak" {{ $status=='ditolak'?'selected':'' }}>Ditolak</option>
                 <option value="all" {{ $status=='all'?'selected':'' }}>Semua</option>
@@ -77,15 +76,15 @@
                 <td>{{ optional($p->lokasi)->bidang ?? '-' }}<br><small>{{ optional($p->lokasi)->tim ?? '' }}</small></td>
                 <td>
                     @if($p->status == 'pengajuan')
-                        <span class="badge bg-warning">Pengajuan</span>
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ $p->id }}">Pengajuan</button>
                     @elseif($p->status == 'diproses')
-                        <span class="badge bg-info">Diproses</span>
+                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ $p->id }}">Diproses</button>
                     @elseif($p->status == 'diterima')
-                        <span class="badge bg-success">Diterima</span>
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ $p->id }}">Diterima</button>
                     @elseif($p->status == 'ditolak')
-                        <span class="badge bg-danger">Ditolak</span>
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ $p->id }}">Ditolak</button>
                     @else
-                        <span class="badge bg-secondary">{{ ucfirst($p->status) }}</span>
+                        <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ $p->id }}">{{ ucfirst($p->status) }}</button>
                     @endif
                 </td>
                 <td>
@@ -111,17 +110,24 @@
                             @endif
                         </div>
                     @else
-                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalStatus{{ $p->id }}">
-                            @if($p->status == 'pengajuan')
-                                Proses Pengajuan
-                            @elseif($p->status == 'diproses')
-                                Ubah Status
-                            @elseif($p->status == 'ditolak')
-                                Review Ulang
-                            @else
-                                Ubah Status
+                        <div class="d-flex gap-1">
+                            @if($p->status == 'diproses')
+                                <button class="btn btn-success btn-sm" onclick="generatePenerimaanLink({{ $p->id }})">
+                                    <i class="bi bi-link-45deg"></i> Generate Link
+                                </button>
                             @endif
-                        </button>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalStatus{{ $p->id }}">
+                                @if($p->status == 'pengajuan')
+                                    Proses Pengajuan
+                                @elseif($p->status == 'diproses')
+                                    Ubah Status
+                                @elseif($p->status == 'ditolak')
+                                    Review Ulang
+                                @else
+                                    Ubah Status
+                                @endif
+                            </button>
+                        </div>
                     @endif
                     <!-- Modal ubah status -->
                     <div class="modal fade" id="modalStatus{{ $p->id }}" tabindex="-1" aria-labelledby="modalStatusLabel{{ $p->id }}" aria-hidden="true">
@@ -137,9 +143,7 @@
                                         <div class="mb-2">
                                             <label>Status</label>
                                             <select name="status" class="form-control" required onchange="toggleAlasan(this, {{ $p->id }})">
-                                                <option value="pengajuan" {{ $p->status == 'pengajuan' ? 'selected' : '' }}>Pengajuan</option>
                                                 <option value="diproses" {{ $p->status == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                                                <option value="diterima" {{ $p->status == 'diterima' ? 'selected' : '' }}>Diterima</option>
                                                 <option value="ditolak" {{ $p->status == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                             </select>
                                         </div>
@@ -155,6 +159,85 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- Modal Detail Pengajuan -->
+                    <div class="modal fade" id="detailModal{{ $p->id }}" tabindex="-1" aria-labelledby="detailModalLabel{{ $p->id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="detailModalLabel{{ $p->id }}">Detail Pengajuan Magang - {{ $p->nama_pemohon }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6><strong>Informasi Pemohon</strong></h6>
+                                            <p><strong>Nama:</strong> {{ $p->nama_pemohon }}</p>
+                                            <p><strong>No HP:</strong> {{ $p->no_hp }}</p>
+                                            <p><strong>Asal Instansi:</strong> {{ $p->asal_instansi }}</p>
+                                            <p><strong>Jurusan:</strong> {{ $p->jurusan }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6><strong>Detail Magang</strong></h6>
+                                            <p><strong>Lokasi:</strong> {{ optional($p->lokasi)->bidang ?? '-' }} - {{ optional($p->lokasi)->tim ?? '' }}</p>
+                                            <p><strong>Mulai:</strong> {{ $p->mulai_magang }}</p>
+                                            <p><strong>Selesai:</strong> {{ $p->selesai_magang }}</p>
+                                            <p><strong>Status:</strong> 
+                                                @if($p->status == 'pengajuan')
+                                                    <span class="badge bg-warning">Pengajuan</span>
+                                                @elseif($p->status == 'diproses')
+                                                    <span class="badge bg-info">Diproses</span>
+                                                @elseif($p->status == 'diterima')
+                                                    <span class="badge bg-success">Diterima</span>
+                                                @elseif($p->status == 'ditolak')
+                                                    <span class="badge bg-danger">Ditolak</span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h6><strong>Keahlian yang Dipelajari</strong></h6>
+                                            <p>{{ $p->keahlian }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    @if($p->anggota)
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6><strong>Anggota Kelompok</strong></h6>
+                                                @php
+                                                    $anggotaData = is_string($p->anggota) ? json_decode($p->anggota, true) : $p->anggota;
+                                                @endphp
+                                                @if(is_array($anggotaData))
+                                                    @foreach($anggotaData as $index => $anggota)
+                                                        <p><strong>{{ $index + 1 }}.</strong> {{ $anggota['nama'] ?? '' }} - {{ $anggota['telepon'] ?? '' }}</p>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($p->status == 'ditolak' && $p->catatan)
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6><strong>Alasan Penolakan</strong></h6>
+                                                <div class="alert alert-danger">{{ $p->catatan }}</div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -177,4 +260,33 @@
         </tbody>
     </table>
 </div>
-@endsection 
+
+<script>
+function generatePenerimaanLink(pengajuanId) {
+    if(confirm('Generate link penerimaan untuk pengajuan ini?')) {
+        fetch(`/admin/pengajuan/${pengajuanId}/generate-link`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                // Show link in a modal or copy to clipboard
+                navigator.clipboard.writeText(data.link).then(() => {
+                    alert('Link berhasil di-generate dan disalin ke clipboard:\n' + data.link);
+                });
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat generate link');
+        });
+    }
+}
+</script>
+@endsection

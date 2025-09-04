@@ -124,11 +124,11 @@ class PengajuanMagangController extends Controller
     {
         $request->validate([
             'nama_pemohon' => ['required','string','max:255','regex:/^[A-Za-zÀ-ÿ\s]+$/'],
-            'no_hp' => ['required','string','max:20','regex:/^\d+$/'],
+            'no_hp' => ['required','string','max:20','regex:/^\d{9,15}$/'],
             'anggota_nama' => 'required|array|min:1',
             'anggota_nama.*' => ['required','string','max:255','regex:/^[A-Za-zÀ-ÿ\s]+$/'],
             'anggota_hp' => 'required|array|min:1',
-            'anggota_hp.*' => ['required','string','max:20','regex:/^\d+$/'],
+            'anggota_hp.*' => ['required','string','max:20','regex:/^\d{9,15}$/'],
             'asal_instansi' => 'required|string',
             'jurusan' => 'required|string',
             'keahlian' => 'required|string',
@@ -231,5 +231,91 @@ class PengajuanMagangController extends Controller
         }
         $pengajuan->delete();
         return redirect()->route('admin.penerimaan.daftar')->with('success', 'Pengajuan magang berhasil dihapus.');
+    }
+
+    public function generatePenerimaanLink($id)
+    {
+        $pengajuan = PengajuanMagang::findOrFail($id);
+        
+        if ($pengajuan->status !== 'diproses') {
+            return response()->json(['success' => false, 'message' => 'Pengajuan harus berstatus diproses']);
+        }
+
+        // Generate unique token
+        $token = \Str::random(32);
+        
+        // Update pengajuan with penerimaan token
+        $pengajuan->update(['penerimaan_token' => $token]);
+        
+        $link = route('penerimaan.form.show', $token);
+        
+        return response()->json(['success' => true, 'link' => $link]);
+    }
+
+    public function showPenerimaanForm($token)
+    {
+        $pengajuan = PengajuanMagang::where('penerimaan_token', $token)->firstOrFail();
+        $lokasi = \App\Models\Lokasi::all();
+        
+        return view('forms.penerimaan', compact('pengajuan', 'lokasi'));
+    }
+
+    public function storePenerimaan(Request $request)
+    {
+        $request->validate([
+            'pengajuan_id' => 'required|exists:pengajuan_magang,id',
+            'peserta_nama' => 'required|array|min:1',
+            'peserta_nama.*' => ['required','string','max:255','regex:/^[A-Za-zÀ-ÿ\s]+$/'],
+            'peserta_telepon' => 'required|array|min:1',
+            'peserta_telepon.*' => ['required','string','max:20','regex:/^\d{9,15}$/'],
+            'instansi' => 'required|string',
+            'jurusan' => 'required|string',
+            'lokasi_id' => 'required|exists:lokasi,id',
+            'mulai_magang' => 'required|date',
+            'selesai_magang' => 'required|date|after_or_equal:mulai_magang',
+            'surat_pengantar' => 'required|file|mimes:pdf|max:2048',
+            'proposal_magang' => 'required|file|mimes:pdf|max:5120',
+            'ktp_peserta' => 'required|file|mimes:pdf|max:5120',
+        ]);
+
+        // Process peserta data
+        $pesertaNama = $request->input('peserta_nama', []);
+        $pesertaTelepon = $request->input('peserta_telepon', []);
+        $pesertaMagang = [];
+        
+        for ($i = 0; $i < count($pesertaNama); $i++) {
+            if (!empty($pesertaNama[$i]) && !empty($pesertaTelepon[$i])) {
+                $pesertaMagang[] = [
+                    'nama' => $pesertaNama[$i],
+                    'telepon' => $pesertaTelepon[$i]
+                ];
+            }
+        }
+
+        // Handle file uploads
+        $suratPengantarPath = $request->file('surat_pengantar')->store('penerimaan/surat_pengantar', 'public');
+        $proposalMagangPath = $request->file('proposal_magang')->store('penerimaan/proposal_magang', 'public');
+        $ktpPesertaPath = $request->file('ktp_peserta')->store('penerimaan/ktp_peserta', 'public');
+
+        // Create penerimaan record
+        \App\Models\Penerimaan::create([
+            'pengajuan_id' => $request->pengajuan_id,
+            'peserta_magang' => $pesertaMagang,
+            'instansi_sekolah_universitas' => $request->instansi,
+            'jurusan' => $request->jurusan,
+            'lokasi_id' => $request->lokasi_id,
+            'mulai_magang' => $request->mulai_magang,
+            'selesai_magang' => $request->selesai_magang,
+            'surat_pengantar_izin' => $suratPengantarPath,
+            'proposal_magang' => $proposalMagangPath,
+            'ktp_peserta' => $ktpPesertaPath,
+            'status' => 'pending'
+        ]);
+
+        // Update pengajuan status to diterima
+        $pengajuan = PengajuanMagang::find($request->pengajuan_id);
+        $pengajuan->update(['status' => 'diterima']);
+
+        return redirect()->back()->with('success', 'Form penerimaan berhasil dikirim! Status pengajuan telah diubah menjadi diterima.');
     }
 }

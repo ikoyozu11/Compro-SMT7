@@ -88,6 +88,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/form-links/{id}/toggle-status', [FormLinkController::class, 'toggleStatus'])->name('form_links.toggle-status');
     Route::get('/pengajuan/daftar', [App\Http\Controllers\PengajuanMagangController::class, 'daftarPengajuan'])->name('pengajuan.daftar');
     Route::post('/pengajuan/{id}/ubah-status', [PengajuanMagangController::class, 'ubahStatusPengajuan'])->name('pengajuan.ubah-status');
+    Route::post('/pengajuan/{id}/generate-link', [PengajuanMagangController::class, 'generatePenerimaanLink'])->name('pengajuan.generate-link');
     
     // Penerimaan routes
     Route::get('/penerimaan', [App\Http\Controllers\PenerimaanController::class, 'index'])->name('penerimaan.index');
@@ -143,3 +144,7 @@ Route::post('/pengajuan-penelitian', [App\Http\Controllers\PengajuanPenelitianCo
 
 /* Form Links */
 Route::get('/form/{token}', [FormLinkController::class, 'show'])->name('form.show');
+
+/* Penerimaan Form Routes */
+Route::get('/penerimaan-form/{token}', [PengajuanMagangController::class, 'showPenerimaanForm'])->name('penerimaan.form.show');
+Route::post('/penerimaan-form', [PengajuanMagangController::class, 'storePenerimaan'])->name('penerimaan.store');

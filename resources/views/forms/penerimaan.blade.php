@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Pengajuan Magang</title>
+    <title>Form Penerimaan Magang</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
@@ -57,7 +57,6 @@
             filter: brightness(0) invert(1);
         }
         
-        /* Sembunyikan judul/deskripsi form */
         .auth-title, .auth-subtitle { display: none !important; }
         
         .form-container {
@@ -66,7 +65,7 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             margin: 20px auto;
-            max-width: 600px;
+            max-width: 700px;
         }
         
         .form-group {
@@ -145,7 +144,7 @@
             color: white;
         }
         
-        .anggota-item {
+        .peserta-item {
             background: #f8fafc;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
@@ -154,7 +153,7 @@
             transition: all 0.3s ease;
         }
         
-        .anggota-item:hover {
+        .peserta-item:hover {
             border-color: #385096;
             box-shadow: 0 2px 8px rgba(56, 80, 150, 0.1);
         }
@@ -201,6 +200,36 @@
             resize: vertical;
         }
         
+        .file-upload {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        
+        .file-upload:hover {
+            border-color: #385096;
+            background: #f1f5f9;
+        }
+        
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        
+        .file-upload-label {
+            cursor: pointer;
+            color: #385096;
+            font-weight: 500;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
         .form-footer {
             text-align: center;
             margin-top: 30px;
@@ -240,6 +269,7 @@
                 <div class="auth-logo">
                     <img src="{{ asset('images/logo/logo.png') }}" alt="Logo">
                 </div>
+                <h3 class="text-white mb-0">Form Penerimaan Magang</h3>
             </div>
         </div>
 
@@ -264,82 +294,135 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('pengajuan.store') }}">
+                    <form method="POST" action="{{ route('penerimaan.store') }}" enctype="multipart/form-data">
                         @csrf
-                        <input type="hidden" name="form_link_id" value="{{ $formLink->id }}">
+                        <input type="hidden" name="pengajuan_id" value="{{ $pengajuan->id }}">
 
+                        <!-- Peserta Magang -->
                         <div class="form-group">
-                            <label class="form-label">Nama Pemohon</label>
-                            <input type="text" name="nama_pemohon" class="form-control only-letters" placeholder="Masukkan nama lengkap" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">No HP Pemohon</label>
-                            <input type="text" name="no_hp" class="form-control only-digits" placeholder="Contoh: 08123456789" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Anggota Kelompok</label>
-                            <div id="anggota-container">
-                                <div class="anggota-item">
+                            <label class="form-label">Nama dan Telepon Peserta Magang</label>
+                            <div id="peserta-container">
+                                <div class="peserta-item">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <input type="text" name="anggota_nama[]" class="form-control only-letters" placeholder="Nama Anggota" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi">
+                                            <input type="text" name="peserta_nama[]" class="form-control only-letters" placeholder="Nama Peserta" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi" value="{{ $pengajuan->nama_pemohon }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <input type="text" name="anggota_hp[]" class="form-control only-digits" placeholder="No HP Anggota" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit">
+                                            <input type="text" name="peserta_telepon[]" class="form-control only-digits" placeholder="No Telepon" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit" value="{{ $pengajuan->no_hp }}">
                                         </div>
                                     </div>
                                 </div>
+                                @if($pengajuan->anggota)
+                                    @foreach(json_decode($pengajuan->anggota, true) as $anggota)
+                                    <div class="peserta-item">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="text" name="peserta_nama[]" class="form-control only-letters" placeholder="Nama Peserta" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi" value="{{ $anggota['nama'] }}">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <input type="text" name="peserta_telepon[]" class="form-control only-digits" placeholder="No Telepon" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit" value="{{ $anggota['telepon'] }}">
+                                            </div>
+                                            <div class="col-md-1 d-grid">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removePeserta(this)" title="Hapus peserta">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                @endif
                             </div>
-                            <button type="button" class="btn btn-outline-primary" onclick="addAnggota()">
-                                <i class="bi bi-plus-circle me-2"></i>Tambah Anggota
+                            <button type="button" class="btn btn-outline-primary" onclick="addPeserta()">
+                                <i class="bi bi-plus-circle me-2"></i>Tambah Peserta
                             </button>
                         </div>
 
+                        <!-- Instansi/Sekolah/Universitas -->
                         <div class="form-group">
-                            <label class="form-label">Asal Instansi</label>
-                            <input type="text" name="asal_instansi" class="form-control" placeholder="Nama universitas/sekolah" required>
+                            <label class="form-label">Instansi/Sekolah/Universitas</label>
+                            <input type="text" name="instansi" class="form-control" placeholder="Nama instansi" required value="{{ $pengajuan->asal_instansi }}">
                         </div>
 
+                        <!-- Jurusan -->
                         <div class="form-group">
                             <label class="form-label">Jurusan</label>
-                            <input type="text" name="jurusan" class="form-control" placeholder="Contoh: Teknik Informatika" required>
+                            <input type="text" name="jurusan" class="form-control" placeholder="Nama jurusan" required value="{{ $pengajuan->jurusan }}">
                         </div>
 
+                        <!-- Magang pada Tim -->
                         <div class="form-group">
-                            <label class="form-label">Keahlian yang Dipelajari</label>
-                            <textarea name="keahlian" class="form-control" rows="4" placeholder="Jelaskan keahlian yang ingin dipelajari selama magang" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Divisi Magang</label>
+                            <label class="form-label">Magang pada Tim (sesuai master lokasi)</label>
                             <select name="lokasi_id" class="form-select" required>
-                                <option value="">-- Pilih Divisi --</option>
+                                <option value="">-- Pilih Tim --</option>
                                 @foreach($lokasi as $item)
-                                    <option value="{{ $item->id }}">{{ $item->bidang }} - {{ $item->tim }}</option>
+                                    <option value="{{ $item->id }}" {{ $pengajuan->lokasi_id == $item->id ? 'selected' : '' }}>
+                                        {{ $item->bidang }} - {{ $item->tim }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
 
+                        <!-- Tanggal Magang -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label">Mulai Magang</label>
-                                    <input type="date" name="mulai_magang" class="form-control" required>
+                                    <input type="date" name="mulai_magang" class="form-control" required value="{{ $pengajuan->mulai_magang }}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-label">Selesai Magang</label>
-                                    <input type="date" name="selesai_magang" class="form-control" required>
+                                    <input type="date" name="selesai_magang" class="form-control" required value="{{ $pengajuan->selesai_magang }}">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Surat Pengantar -->
+                        <div class="form-group">
+                            <label class="form-label">Upload Surat Pengantar / Izin Magang dari Instansi</label>
+                            <div class="file-upload">
+                                <label for="surat_pengantar" class="file-upload-label">
+                                    <i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
+                                    <span>Klik untuk upload surat pengantar</span>
+                                    <div class="file-info">Format: PDF, Maksimal 2MB</div>
+                                </label>
+                                <input type="file" id="surat_pengantar" name="surat_pengantar" accept=".pdf" required>
+                                <div id="surat_pengantar_info" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Proposal Magang -->
+                        <div class="form-group">
+                            <label class="form-label">Proposal Magang</label>
+                            <div class="file-upload">
+                                <label for="proposal_magang" class="file-upload-label">
+                                    <i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
+                                    <span>Klik untuk upload proposal magang</span>
+                                    <div class="file-info">Format: PDF, Maksimal 5MB</div>
+                                </label>
+                                <input type="file" id="proposal_magang" name="proposal_magang" accept=".pdf" required>
+                                <div id="proposal_magang_info" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- Upload KTP Peserta -->
+                        <div class="form-group">
+                            <label class="form-label">KTP Peserta Magang</label>
+                            <div class="file-upload">
+                                <label for="ktp_peserta" class="file-upload-label">
+                                    <i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
+                                    <span>Klik untuk upload KTP peserta</span>
+                                    <div class="file-info">Format: PDF, Maksimal 5MB</div>
+                                </label>
+                                <input type="file" id="ktp_peserta" name="ktp_peserta" accept=".pdf" required>
+                                <div id="ktp_peserta_info" class="mt-2"></div>
                             </div>
                         </div>
 
                         <div class="text-center mt-4">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-send me-2"></i>Ajukan Pengajuan
+                                <i class="bi bi-send me-2"></i>Kirim Form Penerimaan
                             </button>
                         </div>
                     </form>
@@ -355,20 +438,20 @@
     </div>
 
     <script>
-                function addAnggota() {
-            const container = document.getElementById('anggota-container');
+        function addPeserta() {
+            const container = document.getElementById('peserta-container');
             const newItem = document.createElement('div');
-            newItem.className = 'anggota-item';
+            newItem.className = 'peserta-item';
             newItem.innerHTML = `
                 <div class="row align-items-center g-2">
                     <div class="col-md-6">
-                        <input type="text" name="anggota_nama[]" class="form-control only-letters" placeholder="Nama Anggota" required pattern="^[A-Za-zÀ-ÿ\\s]+$" title="Hanya huruf dan spasi">
+                        <input type="text" name="peserta_nama[]" class="form-control only-letters" placeholder="Nama Peserta" required pattern="^[A-Za-zÀ-ÿ\\s]+$" title="Hanya huruf dan spasi">
                     </div>
                     <div class="col-md-5">
-                        <input type="text" name="anggota_hp[]" class="form-control only-digits" placeholder="No HP Anggota" required pattern="^\\d{9,15}$" title="Nomor HP harus 9-15 digit">
+                        <input type="text" name="peserta_telepon[]" class="form-control only-digits" placeholder="No Telepon" required pattern="^\\d{9,15}$" title="Nomor HP harus 9-15 digit">
                     </div>
                     <div class="col-md-1 d-grid">
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeAnggota(this)" title="Hapus anggota">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removePeserta(this)" title="Hapus peserta">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -377,11 +460,43 @@
             container.appendChild(newItem);
         }
 
-        function removeAnggota(button) {
-            button.closest('.anggota-item').remove();
+        function removePeserta(button) {
+            button.closest('.peserta-item').remove();
         }
 
-        // Sanitasi input di sisi klien
+        // File upload handlers
+        document.getElementById('surat_pengantar').addEventListener('change', function(e) {
+            handleFileUpload(e, 'surat_pengantar_info', 2);
+        });
+
+        document.getElementById('proposal_magang').addEventListener('change', function(e) {
+            handleFileUpload(e, 'proposal_magang_info', 5);
+        });
+
+        document.getElementById('ktp_peserta').addEventListener('change', function(e) {
+            handleFileUpload(e, 'ktp_peserta_info', 5);
+        });
+
+        function handleFileUpload(event, infoId, maxSizeMB) {
+            const file = event.target.files[0];
+            const infoDiv = document.getElementById(infoId);
+            
+            if (file) {
+                const fileSizeMB = file.size / (1024 * 1024);
+                
+                if (fileSizeMB > maxSizeMB) {
+                    infoDiv.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> File terlalu besar! Maksimal ${maxSizeMB}MB</span>`;
+                    event.target.value = '';
+                } else if (file.type !== 'application/pdf') {
+                    infoDiv.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Hanya file PDF yang diizinkan</span>`;
+                    event.target.value = '';
+                } else {
+                    infoDiv.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> ${file.name} (${fileSizeMB.toFixed(2)}MB)</span>`;
+                }
+            }
+        }
+
+        // Input sanitization
         document.addEventListener('input', function(e){
             if(e.target.classList && e.target.classList.contains('only-letters')){
                 e.target.value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g,'');
@@ -393,4 +508,4 @@
     </script>
 </body>
 
-</html> 
+</html>

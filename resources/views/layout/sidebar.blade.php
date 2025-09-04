@@ -16,6 +16,7 @@
 
 
 
+                        @if(Auth::check() && Auth::user()->role !== 'admin')
                         <li class="sidebar-title">Magang</li>
 
                         <li class="sidebar-item {{ Route::is('mg.home') ? 'active' : '' }} ">
@@ -45,6 +46,7 @@
                                 <span>Peserta</span>
                             </a>
                         </li>
+                        @endif
 
                         @if(Auth::check() && Auth::user()->role === 'admin')
                             <li class="sidebar-title">Admin</li>

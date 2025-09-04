@@ -24,6 +24,8 @@ class PengajuanMagang extends Model
         'status',
         'catatan',
         'file_surat',
+        'penerimaan_token',
+        'anggota',
     ];
 
     public function lokasi()
