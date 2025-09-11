@@ -17,6 +17,7 @@
                             <th>No</th>
                             <th>Tanggal</th>
                             <th>Waktu</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -25,6 +26,15 @@
                             <td>{{ $i+1 }}</td>
                             <td>{{ $absenList[$i]->tgl }}</td>
                             <td>{{ $absenList[$i]->waktu }}</td>
+                            <td>
+                                @if(isset($absenList[$i]->status))
+                                    <span class="badge {{ $absenList[$i]->status == 'Masuk Terlambat' ? 'bg-warning' : ($absenList[$i]->status == 'Pulang Awal' ? 'bg-info' : ($absenList[$i]->status == 'Masuk' ? 'bg-success' : 'bg-danger')) }}">
+                                        {{ $absenList[$i]->status }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary">-</span>
+                                @endif
+                            </td>
                         </tr>
                         @endfor
                     </tbody>

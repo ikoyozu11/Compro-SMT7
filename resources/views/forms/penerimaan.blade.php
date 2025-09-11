@@ -312,29 +312,38 @@
                                         </div>
                                     </div>
                                 </div>
-                                @if($pengajuan->anggota)
-                                    @foreach(json_decode($pengajuan->anggota, true) as $anggota)
-                                    <div class="peserta-item">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" name="peserta_nama[]" class="form-control only-letters" placeholder="Nama Peserta" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi" value="{{ $anggota['nama'] }}">
-                                            </div>
-                                            <div class="col-md-5">
-                                                <input type="text" name="peserta_telepon[]" class="form-control only-digits" placeholder="No Telepon" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit" value="{{ $anggota['telepon'] }}">
-                                            </div>
-                                            <div class="col-md-1 d-grid">
-                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removePeserta(this)" title="Hapus peserta">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                @if($pengajuan->nama_anggota)
+                                    @php
+                                        // Parse nama_anggota string format: "Nama1 (HP: 123456789); Nama2 (HP: 987654321)"
+                                        $anggotaList = explode('; ', $pengajuan->nama_anggota);
+                                    @endphp
+                                    @foreach($anggotaList as $anggotaString)
+                                        @php
+                                            // Extract nama and HP from format "Nama (HP: 123456789)"
+                                            if (preg_match('/^(.+?)\s*\(HP:\s*(.+?)\)$/', trim($anggotaString), $matches)) {
+                                                $nama = trim($matches[1]);
+                                                $hp = trim($matches[2]);
+                                            } else {
+                                                // Fallback if format doesn't match
+                                                $nama = trim($anggotaString);
+                                                $hp = '';
+                                            }
+                                        @endphp
+                                        @if($nama && $hp)
+                                        <div class="peserta-item">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <input type="text" name="peserta_nama[]" class="form-control only-letters" placeholder="Nama Peserta" required pattern="^[A-Za-zÀ-ÿ\s]+$" title="Hanya huruf dan spasi" value="{{ $nama }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="text" name="peserta_telepon[]" class="form-control only-digits" placeholder="No Telepon" required pattern="^\d{9,15}$" title="Nomor HP harus 9-15 digit" value="{{ $hp }}">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                        @endif
                                     @endforeach
                                 @endif
                             </div>
-                            <button type="button" class="btn btn-outline-primary" onclick="addPeserta()">
-                                <i class="bi bi-plus-circle me-2"></i>Tambah Peserta
-                            </button>
                         </div>
 
                         <!-- Instansi/Sekolah/Universitas -->

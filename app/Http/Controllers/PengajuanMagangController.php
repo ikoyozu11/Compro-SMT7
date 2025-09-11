@@ -67,18 +67,6 @@ class PengajuanMagangController extends Controller
         
         
         if ($status === 'diterima') {
-            // Create user account if needed
-            $user = User::where('username', $pengajuan->no_hp)->first();
-            if (!$user) {
-                User::create([
-                    'username' => $pengajuan->no_hp,
-                    'password' => Hash::make('magang123'),
-                    'name' => $pengajuan->nama_pemohon,
-                    'role' => 'magang',
-                    'status' => 1,
-                ]);
-            }
-            
             // Automatically create penerimaan record
             $this->createPenerimaanFromPengajuan($pengajuan);
         }
@@ -161,8 +149,13 @@ class PengajuanMagangController extends Controller
             }
         }
         
-        PengajuanMagang::create($data);
-        return redirect()->back()->with('success', 'Pengajuan magang berhasil dikirim!');
+        // Create pengajuan record
+        $pengajuan = PengajuanMagang::create($data);
+        
+        // Auto-create user accounts for all team members
+        $this->createUsersFromPengajuan($request, $pengajuan);
+        
+        return redirect()->back()->with('success', 'Pengajuan magang berhasil dikirim! Akun user telah dibuat otomatis untuk semua anggota.');
     }
 
     public function daftarPengajuan(Request $request)
@@ -317,5 +310,34 @@ class PengajuanMagangController extends Controller
         $pengajuan->update(['status' => 'diterima']);
 
         return redirect()->back()->with('success', 'Form penerimaan berhasil dikirim! Status pengajuan telah diubah menjadi diterima.');
+    }
+
+    /**
+     * Create user accounts for all team members from pengajuan data
+     */
+    private function createUsersFromPengajuan(Request $request, $pengajuan)
+    {
+        $anggotaNama = $request->input('anggota_nama', []);
+        $anggotaHp = $request->input('anggota_hp', []);
+        
+        // Create users for all team members
+        for ($i = 0; $i < count($anggotaNama); $i++) {
+            if (!empty($anggotaNama[$i]) && !empty($anggotaHp[$i])) {
+                // Check if user with this phone number already exists
+                $existingUser = User::where('username', $anggotaHp[$i])->first();
+                
+                if (!$existingUser) {
+                    User::create([
+                        'username' => $anggotaHp[$i], // Use phone number as username
+                        'password' => Hash::make('123'), // Default password
+                        'name' => $anggotaNama[$i],
+                        'phone' => $anggotaHp[$i],
+                        'institution' => $request->input('asal_instansi'),
+                        'role' => 'magang',
+                        'status' => 1, // Active status
+                    ]);
+                }
+            }
+        }
     }
 }

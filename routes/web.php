@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ProgressController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LokasiController;
@@ -49,7 +50,24 @@ Route::get('mg-home', [AbsensiController::class, 'index'])->name('mg.home')->mid
 
 Route::post('mg-absen-save', [AbsensiController::class, 'saveAbsensi'])->name('mg.absen.save')->middleware('auth');
 
+Route::post('mg-absen-masuk', [AbsensiController::class, 'absenMasuk'])->name('mg.absen.masuk')->middleware('auth');
+
+Route::post('mg-absen-pulang', [AbsensiController::class, 'absenPulang'])->name('mg.absen.pulang')->middleware('auth');
+
 Route::get('mg-absen-history', [AbsensiController::class, 'history'])->name('mg.absen.history')->middleware('auth');
+
+Route::get('mg-progress', [ProgressController::class, 'index'])->name('mg.progress')->middleware('auth');
+
+Route::post('mg-progress-upload', [ProgressController::class, 'upload'])->name('mg.progress.upload')->middleware(['auth', 'handle.post.too.large']);
+
+Route::get('mg-progress-download/{id}', [ProgressController::class, 'download'])->name('mg.progress.download')->middleware('auth');
+
+Route::delete('mg-progress-delete/{id}', [ProgressController::class, 'delete'])->name('mg.progress.delete')->middleware('auth');
+
+Route::get('mg-hasil', [App\Http\Controllers\HasilMagangController::class, 'magangIndex'])->name('mg.hasil')->middleware('auth');
+Route::post('mg-hasil', [App\Http\Controllers\HasilMagangController::class, 'magangStore'])->name('mg.hasil.store')->middleware('auth');
+Route::post('mg-hasil-upload-surat', [App\Http\Controllers\HasilMagangController::class, 'magangUploadSuratKeterangan'])->name('mg.hasil.upload-surat')->middleware('auth');
+
 
 Route::get('/mg-recap/{start}/{end}', [AbsensiController::class, 'recap'])->name('mg.recap')->middleware('auth');
 
@@ -67,7 +85,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::prefix('master')->name('master.')->group(function () {
         Route::get('/user', [AdminController::class, 'user'])->name('user');
-                Route::post('/user/add', [UserController::class, 'addUserSave'])->name('user.add');
+        Route::get('/user/add', [AdminController::class, 'user'])->name('user.add');
+        Route::post('/user/add', [UserController::class, 'addUserSave'])->name('user.add.save');
         Route::post('/user/edit/{id}', [UserController::class, 'editUserSave'])->name('user.edit');
         Route::get('/user/edit-page/{id}', [UserController::class, 'editUserPage'])->name('user.edit-page');
         Route::post('/user/delete/{id}', [UserController::class, 'deleteUser'])->name('user.delete');
@@ -110,6 +129,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/hasil/{id}/upload-surat-keterangan', [App\Http\Controllers\HasilMagangController::class, 'uploadSuratKeterangan'])->name('hasil.upload-surat-keterangan');
     Route::get('/hasil/{id}/download-laporan', [App\Http\Controllers\HasilMagangController::class, 'downloadLaporan'])->name('hasil.download-laporan');
     Route::get('/hasil/{id}/download-surat-keterangan', [App\Http\Controllers\HasilMagangController::class, 'downloadSuratKeterangan'])->name('hasil.download-surat-keterangan');
+    
+    // Additional routes for admin view compatibility
+    Route::get('/hasil/{id}/download-laporan', [App\Http\Controllers\HasilMagangController::class, 'downloadLaporan'])->name('hasil.download.laporan');
+    Route::get('/hasil/{id}/download-surat-keterangan', [App\Http\Controllers\HasilMagangController::class, 'downloadSuratKeterangan'])->name('hasil.download.surat');
+    Route::post('/hasil', [App\Http\Controllers\HasilMagangController::class, 'store'])->name('hasil.store');
+    Route::post('/hasil/{id}/upload-surat-keterangan', [App\Http\Controllers\HasilMagangController::class, 'uploadSuratKeterangan'])->name('hasil.upload-surat-keterangan');
     Route::delete('/hasil/{id}', [App\Http\Controllers\HasilMagangController::class, 'destroy'])->name('hasil.destroy');
     // Penelitian routes
     Route::get('/penelitian/link', [PengajuanPenelitianController::class, 'generateLink'])->name('penelitian.link');

@@ -40,7 +40,9 @@
                                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                                     <ol class="breadcrumb">
                                         @if(!Route::is('mg.home'))
-                                            <li class="breadcrumb-item"><a href="{{ route('admin.home') }}">Beranda</a></li>
+                                            <li class="breadcrumb-item">
+                                                <a href="{{ Auth::user()->role === 'admin' ? route('admin.home') : route('mg.home') }}">Beranda</a>
+                                            </li>
                                         @endif
 
 

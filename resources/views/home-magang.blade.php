@@ -8,20 +8,34 @@
             <div class="col-12 col-lg-4">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Senin, 17 Agustus 2024</h4>
+                        <h4 class="card-title">{{ \Carbon\Carbon::now('Asia/Jakarta')->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</h4>
                     </div>
                     <div class="card-body">
                         <div class="alert alert-secondary text-center">
                             <h5>Klik Untuk Absensi</h5>
-                            <form method="post" action="{{ route('mg.absen.save') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-danger rounded-pill btn-lg">ABSENSI</button>
-                            </form> 
+                            <div class="d-flex gap-2 justify-content-center">
+                                <form method="post" action="{{ route('mg.absen.masuk') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success rounded-pill btn-lg">ABSEN MASUK</button>
+                                </form>
+                                
+                                <form method="post" action="{{ route('mg.absen.pulang') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger rounded-pill btn-lg">ABSEN PULANG</button>
+                                </form>
+                            </div>
                         </div>
                             <!-- Display success message -->
                             @if(session('success'))
                             <div class="alert alert-success">
                                 {{ session('success') }}
+                            </div>
+                            @endif
+
+                            <!-- Display error message -->
+                            @if(session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
                             </div>
                             @endif
 
@@ -42,8 +56,8 @@
                                         :
                                     </td>
                                     <td>
-                                        @if(!empty($absensiToday[0]->masuk))
-                                            {{ $absensiToday[0]->masuk }}
+                                        @if($absensiToday && $absensiToday->masuk)
+                                            {{ $absensiToday->masuk }}
                                         @else
                                             --
                                         @endif
@@ -58,8 +72,8 @@
                                         :
                                     </td>
                                     <td>
-                                        @if(!empty($absensiToday[0]->pulang))
-                                            {{ $absensiToday[0]->pulang }}
+                                        @if($absensiToday && $absensiToday->pulang)
+                                            {{ $absensiToday->pulang }}
                                         @else
                                             --
                                         @endif

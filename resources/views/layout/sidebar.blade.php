@@ -40,12 +40,20 @@
                             </a>
                         </li>
 
-                        <li class="sidebar-item  ">
-                            <a href="{{ route('admin.peserta') }}" class='sidebar-link'>
-                                <i class="bi bi-person-badge"></i>
-                                <span>Peserta</span>
+                        <li class="sidebar-item {{ Route::is('mg.progress') ? 'active' : '' }} ">
+                            <a href="{{ route('mg.progress') }}" class='sidebar-link'>
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span>Progress</span>
                             </a>
                         </li>
+
+                        <li class="sidebar-item {{ Route::is('mg.hasil') ? 'active' : '' }} ">
+                            <a href="{{ route('mg.hasil') }}" class='sidebar-link'>
+                                <i class="bi bi-clipboard-data"></i>
+                                <span>Hasil Magang</span>
+                            </a>
+                        </li>
+
                         @endif
 
                         @if(Auth::check() && Auth::user()->role === 'admin')
@@ -376,19 +384,26 @@
                             </a>
                         </li>
 
-                        <li class="sidebar-item  ">
-                            <a href="application-gallery.html" class='sidebar-link'>
-                                <i class="bi bi-image-fill"></i>
-                                <span>Photo Gallery</span>
-                            </a>
-                        </li>
+                        <li class="sidebar-item">
+                        <a href="{{ route('mg.absen.history') }}" class='sidebar-link'>
+                            <i class="bi bi-clock-history"></i>
+                            <span>Riwayat Absensi</span>
+                        </a>
+                    </li>
 
-                        <li class="sidebar-item  ">
-                            <a href="application-checkout.html" class='sidebar-link'>
-                                <i class="bi bi-basket-fill"></i>
-                                <span>Checkout Page</span>
-                            </a>
-                        </li>
+                    <li class="sidebar-item">
+                        <a href="{{ route('mg.recap.m') }}" class='sidebar-link'>
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Rekap Absensi</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-item">
+                        <a href="{{ route('mg.progress') }}" class='sidebar-link'>
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>Progress</span>
+                        </a>
+                    </li>
 
                         <li class="sidebar-item  has-sub">
                             <a href="#" class='sidebar-link'>

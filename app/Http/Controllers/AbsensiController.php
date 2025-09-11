@@ -14,15 +14,63 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        $absensiToday = DB::table(DB::raw("(SELECT time FROM `absensi` WHERE user_id = $userId AND DATE(time) = CURDATE()) as satu"))
-                    ->select(DB::raw("DATE_FORMAT(MIN(satu.time),'%H:%i:%s') as masuk, DATE_FORMAT(MAX(satu.time),'%H:%i:%s') as pulang"))
-                    ->get();
+        // Get today's attendance with proper null handling and WIB timezone
+        $absensiToday = DB::table('absensi')
+                    ->select(
+                        DB::raw("DATE_FORMAT(CONVERT_TZ(MIN(time), '+00:00', '+07:00'),'%H:%i:%s') as masuk"), 
+                        DB::raw("CASE WHEN COUNT(*) > 1 THEN DATE_FORMAT(CONVERT_TZ(MAX(time), '+00:00', '+07:00'),'%H:%i:%s') ELSE NULL END as pulang"),
+                        DB::raw("COUNT(*) as count_absen")
+                    )
+                    ->where('user_id', $userId)
+                    ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), now('Asia/Jakarta')->format('Y-m-d'))
+                    ->first();
 
-        $absenList = Absensi::select(DB::raw("DATE_FORMAT(time, '%d-%m-%Y') as tgl, DATE_FORMAT(time, '%H:%i:%s') as waktu"))
-                    ->where('user_id',$userId)
+        // Debug: Check if we have attendance data
+        if (!$absensiToday || $absensiToday->count_absen == 0) {
+            $absensiToday = (object) ['masuk' => null, 'pulang' => null, 'count_absen' => 0];
+        }
+
+        $absenList = Absensi::where('user_id',$userId)
                     ->orderBy('time','desc')
-                    ->limit(5)
-                    ->get();
+                    ->limit(10)
+                    ->get()
+                    ->map(function($absen) {
+                        $timeWib = $absen->time->setTimezone('Asia/Jakarta');
+                        return (object) [
+                            'id' => $absen->id,
+                            'tgl' => $timeWib->format('d-m-Y'),
+                            'waktu' => $timeWib->format('H:i:s'),
+                            'time_wib' => $timeWib
+                        ];
+                    });
+
+        // Add status logic for each attendance record
+        foreach ($absenList as $index => $absen) {
+            $timeWib = \Carbon\Carbon::parse($absen->time_wib);
+            $date = $timeWib->format('Y-m-d');
+            
+            // Count attendance for this date to determine if it's check-in or check-out
+            $attendanceCount = Absensi::where('user_id', $userId)
+                                    ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), $date)
+                                    ->where('id', '<=', $absen->id)
+                                    ->count();
+            
+            if ($attendanceCount == 1) {
+                // First attendance of the day = Check-in
+                if ($timeWib->hour >= 8) {
+                    $absen->status = 'Masuk Terlambat';
+                } else {
+                    $absen->status = 'Masuk';
+                }
+            } else {
+                // Second or later attendance = Check-out
+                if ($timeWib->hour < 16) {
+                    $absen->status = 'Pulang Awal';
+                } else {
+                    $absen->status = 'Pulang';
+                }
+            }
+        }
 
         return view('home-magang',['absensiToday'=>$absensiToday, 'absenList'=>$absenList]);
     }
@@ -33,7 +81,7 @@ class AbsensiController extends Controller
 
         $absensi = new Absensi();
         $absensi->user_id = $userId;
-        $absensi->time = date('Y-m-d H:i:s');
+        $absensi->time = now('Asia/Jakarta');
         $absensi->save();
 
         // Flash a success message to the session
@@ -43,14 +91,105 @@ class AbsensiController extends Controller
         return redirect()->back();
     }
 
-    public function history()
+    public function absenMasuk()
     {
         $userId = (Auth::user())->id;
 
-        $absenList = Absensi::select(DB::raw("DATE_FORMAT(time, '%d-%m-%Y') as tgl, DATE_FORMAT(time, '%H:%i:%s') as waktu"))
-                    ->where('user_id',$userId)
+        // Check if user already has check-in today
+        $existingAbsen = Absensi::where('user_id', $userId)
+                                ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), now('Asia/Jakarta')->format('Y-m-d'))
+                                ->first();
+
+        if ($existingAbsen) {
+            session()->flash('error', 'Anda sudah melakukan absen masuk hari ini.');
+            return redirect()->back();
+        }
+
+        $absensi = new Absensi();
+        $absensi->user_id = $userId;
+        $absensi->time = now('Asia/Jakarta');
+        $absensi->save();
+
+        session()->flash('success', 'Berhasil absen masuk.');
+        return redirect()->back();
+    }
+
+    public function absenPulang()
+    {
+        $userId = (Auth::user())->id;
+
+        // Check if user has check-in today
+        $absenMasuk = Absensi::where('user_id', $userId)
+                             ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), now('Asia/Jakarta')->format('Y-m-d'))
+                             ->first();
+
+        if (!$absenMasuk) {
+            session()->flash('error', 'Anda belum melakukan absen masuk hari ini.');
+            return redirect()->back();
+        }
+
+        // Check if user already has multiple entries (already checked out)
+        $absenCount = Absensi::where('user_id', $userId)
+                             ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), now('Asia/Jakarta')->format('Y-m-d'))
+                             ->count();
+
+        if ($absenCount >= 2) {
+            session()->flash('error', 'Anda sudah melakukan absen pulang hari ini.');
+            return redirect()->back();
+        }
+
+        $absensi = new Absensi();
+        $absensi->user_id = $userId;
+        $absensi->time = now('Asia/Jakarta');
+        $absensi->save();
+
+        session()->flash('success', 'Berhasil absen pulang.');
+        return redirect()->back();
+    }
+
+    public function history()
+    {
+        $userId = (Auth::user())->id;
+        $absenList = Absensi::where('user_id',$userId)
                     ->orderBy('time','desc')
-                    ->get();
+                    ->get()
+                    ->map(function($absen) {
+                        $timeWib = $absen->time->setTimezone('Asia/Jakarta');
+                        return (object) [
+                            'id' => $absen->id,
+                            'tgl' => $timeWib->format('d-m-Y'),
+                            'waktu' => $timeWib->format('H:i:s'),
+                            'time_wib' => $timeWib
+                        ];
+                    });
+
+        // Add status logic for each attendance record
+        foreach ($absenList as $index => $absen) {
+            $timeWib = \Carbon\Carbon::parse($absen->time_wib);
+            $date = $timeWib->format('Y-m-d');
+            
+            // Count attendance for this date to determine if it's check-in or check-out
+            $attendanceCount = Absensi::where('user_id', $userId)
+                                    ->whereDate(DB::raw("CONVERT_TZ(time, '+00:00', '+07:00')"), $date)
+                                    ->where('id', '<=', $absen->id)
+                                    ->count();
+            
+            if ($attendanceCount == 1) {
+                // First attendance of the day = Check-in
+                if ($timeWib->hour >= 8) {
+                    $absen->status = 'Masuk Terlambat';
+                } else {
+                    $absen->status = 'Masuk';
+                }
+            } else {
+                // Second or later attendance = Check-out
+                if ($timeWib->hour < 16) {
+                    $absen->status = 'Pulang Awal';
+                } else {
+                    $absen->status = 'Pulang';
+                }
+            }
+        }
 
         return view('absensi-history',['absenList'=>$absenList]);
     }
@@ -61,29 +200,49 @@ class AbsensiController extends Controller
         $data = [];
 
         if(!empty($dateStart) && !empty($dateEnd)){
-            $query = "SELECT cal.*, absen.* 
-            FROM
-            (WITH RECURSIVE DateRange AS (
-            SELECT '".$dateStart."' AS date
-            UNION ALL
-            SELECT date + INTERVAL 1 DAY
-            FROM DateRange
-            WHERE date < '".$dateEnd."'
+            // Generate date range and get attendance data
+            $query = "
+            WITH RECURSIVE DateRange AS (
+                SELECT '".$dateStart."' AS date
+                UNION ALL
+                SELECT date + INTERVAL 1 DAY
+                FROM DateRange
+                WHERE date < '".$dateEnd."'
             )
-            SELECT date AS tgl
-            FROM DateRange) cal
-            LEFT JOIN
-            (SELECT IF(a.user_id IS NULL, b.user_id, a.user_id) AS user_id, IF(a.tgl IS NULL, b.leave_date, a.tgl) AS tgl_absen, a.masuk, a.pulang, a.terlambat, a.cepat_pulang, b.user_id AS usr_id, b.leave_date AS tgl_izin, b.type, b.note, b.letter
-            FROM absensi_recap_view a
-            LEFT JOIN izin b ON a.user_id = b.user_id AND STR_TO_DATE(a.tgl, '%d-%m-%Y') = b.leave_date
-            WHERE a.user_id = ".$userId."
-            UNION
-            SELECT IF(a.user_id IS NULL, b.user_id, a.user_id) AS user_id, IF(a.tgl IS NULL, b.leave_date, a.tgl) AS tgl_absen, a.masuk, a.pulang, a.terlambat, a.cepat_pulang, b.user_id AS usr_id, b.leave_date AS tgl_izin, b.type, b.note, b.letter
-            FROM absensi_recap_view a
-            RIGHT JOIN izin b ON a.user_id = b.user_id AND STR_TO_DATE(a.tgl, '%d-%m-%Y') = b.leave_date
-            WHERE b.user_id = ".$userId."
-            ORDER BY tgl_absen ASC) absen
-            ON cal.tgl = absen.tgl_absen;";
+            SELECT 
+                cal.date as tgl,
+                absen_summary.masuk,
+                absen_summary.pulang,
+                absen_summary.terlambat,
+                absen_summary.cepat_pulang,
+                absen_summary.keterangan
+            FROM DateRange cal
+            LEFT JOIN (
+                SELECT 
+                    DATE(CONVERT_TZ(time, '+00:00', '+07:00')) as tgl_absen,
+                    DATE_FORMAT(CONVERT_TZ(MIN(time), '+00:00', '+07:00'), '%H:%i:%s') as masuk,
+                    CASE 
+                        WHEN COUNT(*) > 1 THEN DATE_FORMAT(CONVERT_TZ(MAX(time), '+00:00', '+07:00'), '%H:%i:%s')
+                        ELSE NULL 
+                    END as pulang,
+                    CASE 
+                        WHEN TIME(CONVERT_TZ(MIN(time), '+00:00', '+07:00')) >= '08:00:00' THEN 'Ya'
+                        ELSE 'Tidak'
+                    END as terlambat,
+                    CASE 
+                        WHEN COUNT(*) > 1 AND TIME(CONVERT_TZ(MAX(time), '+00:00', '+07:00')) < '16:00:00' THEN 'Ya'
+                        ELSE 'Tidak'
+                    END as cepat_pulang,
+                    CASE 
+                        WHEN COUNT(*) = 0 THEN 'Tidak Hadir'
+                        WHEN COUNT(*) = 1 THEN 'Belum Pulang'
+                        ELSE 'Hadir'
+                    END as keterangan
+                FROM absensi 
+                WHERE user_id = ".$userId."
+                GROUP BY DATE(CONVERT_TZ(time, '+00:00', '+07:00'))
+            ) absen_summary ON cal.date = absen_summary.tgl_absen
+            ORDER BY cal.date ASC";
 
             $data = DB::select($query);
         }

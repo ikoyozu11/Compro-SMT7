@@ -48,7 +48,18 @@
                                     <tr>
                                         <td>
                                             @if($item->pengajuan)
-                                                {{ $item->pengajuan->nama_pemohon }}
+                                                @php
+                                                    $allNames = [$item->pengajuan->nama_pemohon];
+                                                    if($item->pengajuan->nama_anggota) {
+                                                        $anggotaList = explode('; ', $item->pengajuan->nama_anggota);
+                                                        foreach($anggotaList as $anggotaString) {
+                                                            if (preg_match('/^(.+?)\s*\(HP:\s*(.+?)\)$/', trim($anggotaString), $matches)) {
+                                                                $allNames[] = trim($matches[1]);
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                {{ implode(', ', $allNames) }}
                                             @else
                                                 <span class="text-muted">Data tidak tersedia</span>
                                             @endif
@@ -105,29 +116,29 @@
                                             @if($item->penerimaan && $item->penerimaan->pengajuan)
                                                 {{ $item->penerimaan->pengajuan->nama_pemohon }}
                                             @else
-                                                <span class="text-muted">Data tidak tersedia</span>
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>
-                                            @if($item->penerimaan)
-                                                {{ $item->penerimaan->instansi_sekolah_universitas }}
+                                            @if($item->penerimaan && $item->penerimaan->pengajuan)
+                                                {{ $item->penerimaan->pengajuan->asal_instansi }}
                                             @else
-                                                <span class="text-muted">Data tidak tersedia</span>
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($item->penerimaan && $item->penerimaan->lokasi)
                                                 {{ $item->penerimaan->lokasi->nama_lokasi }}
                                             @else
-                                                <span class="text-muted">Data tidak tersedia</span>
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>
                                             @if($item->penerimaan)
-                                                {{ \Carbon\Carbon::parse($item->penerimaan->mulai_magang)->format('d/m/Y') }} - 
-                                                {{ \Carbon\Carbon::parse($item->penerimaan->selesai_magang)->format('d/m/Y') }}
+                                                {{ $item->penerimaan->mulai_magang ? \Carbon\Carbon::parse($item->penerimaan->mulai_magang)->format('d/m/Y') : '-' }} - 
+                                                {{ $item->penerimaan->selesai_magang ? \Carbon\Carbon::parse($item->penerimaan->selesai_magang)->format('d/m/Y') : '-' }}
                                             @else
-                                                <span class="text-muted">Data tidak tersedia</span>
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>
@@ -135,45 +146,41 @@
                                                 <span class="badge bg-warning">Pending</span>
                                             @elseif($item->status == 'completed')
                                                 <span class="badge bg-success">Selesai</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($item->tanggal_selesai)
-                                                {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d/m/Y') }}
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="badge bg-secondary">{{ $item->status }}</span>
                                             @endif
                                         </td>
+                                        <td>{{ $item->tanggal_selesai ? \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') : '-' }}</td>
                                         <td>
-                                            <div class="d-flex gap-1">
+                                            <div class="btn-group" role="group">
                                                 @if($item->laporan_hasil_magang)
-                                                    <a href="{{ route('admin.hasil.download-laporan', $item->id) }}" 
-                                                       class="btn btn-sm btn-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Laporan">
-                                                        <i class="mdi mdi-download"></i> Laporan
+                                                    <a href="{{ route('admin.hasil.download.laporan', $item->id) }}" 
+                                                       class="btn btn-sm btn-success" title="Download Laporan">
+                                                        <i class="bi bi-download"></i> Laporan
                                                     </a>
                                                 @endif
                                                 
                                                 @if($item->surat_keterangan_selesai)
-                                                    <a href="{{ route('admin.hasil.download-surat-keterangan', $item->id) }}" 
-                                                       class="btn btn-sm btn-success" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Surat Keterangan">
-                                                        <i class="mdi mdi-download"></i> Sertifikat
+                                                    <a href="{{ route('admin.hasil.download.surat', $item->id) }}" 
+                                                       class="btn btn-sm btn-info" title="Download Surat Keterangan">
+                                                        <i class="bi bi-download"></i> Surat
                                                     </a>
-                                                @else
-                                                    <button type="button" class="btn btn-sm btn-warning" 
-                                                            data-bs-toggle="modal" data-bs-target="#uploadSuratModal{{ $item->id }}">
-                                                        <i class="mdi mdi-upload"></i> Upload Sertifikat
+                                                @endif
+                                                
+                                                @if($item->status == 'pending')
+                                                    <button type="button" class="btn btn-sm btn-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#uploadSuratModal{{ $item->id }}"
+                                                            title="Upload Surat Keterangan">
+                                                        <i class="bi bi-upload"></i> Upload Surat
                                                     </button>
                                                 @endif
                                                 
-                                                <form action="{{ route('admin.hasil.destroy', $item->id) }}" 
-                                                      method="POST" class="d-inline" 
-                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
-                                                        <i class="mdi mdi-delete"></i> Hapus
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        onclick="confirmDelete({{ $item->id }})"
+                                                        title="Hapus">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -211,7 +218,21 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nama Pemohon</label>
-                        <input type="text" class="form-control" value="{{ $item->pengajuan ? $item->pengajuan->nama_pemohon : 'Data tidak tersedia' }}" readonly>
+                        @php
+                            $allNames = [];
+                            if($item->pengajuan) {
+                                $allNames[] = $item->pengajuan->nama_pemohon;
+                                if($item->pengajuan->nama_anggota) {
+                                    $anggotaList = explode('; ', $item->pengajuan->nama_anggota);
+                                    foreach($anggotaList as $anggotaString) {
+                                        if (preg_match('/^(.+?)\s*\(HP:\s*(.+?)\)$/', trim($anggotaString), $matches)) {
+                                            $allNames[] = trim($matches[1]);
+                                        }
+                                    }
+                                }
+                            }
+                        @endphp
+                        <input type="text" class="form-control" value="{{ count($allNames) > 0 ? implode(', ', $allNames) : 'Data tidak tersedia' }}" readonly>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Instansi</label>
@@ -259,8 +280,22 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nama Pemohon</label>
+                        @php
+                            $allNames = [];
+                            if($item->penerimaan && $item->penerimaan->pengajuan) {
+                                $allNames[] = $item->penerimaan->pengajuan->nama_pemohon;
+                                if($item->penerimaan->pengajuan->nama_anggota) {
+                                    $anggotaList = explode('; ', $item->penerimaan->pengajuan->nama_anggota);
+                                    foreach($anggotaList as $anggotaString) {
+                                        if (preg_match('/^(.+?)\s*\(HP:\s*(.+?)\)$/', trim($anggotaString), $matches)) {
+                                            $allNames[] = trim($matches[1]);
+                                        }
+                                    }
+                                }
+                            }
+                        @endphp
                         <input type="text" class="form-control" 
-                               value="{{ $item->penerimaan && $item->penerimaan->pengajuan ? $item->penerimaan->pengajuan->nama_pemohon : 'Data tidak tersedia' }}" readonly>
+                               value="{{ count($allNames) > 0 ? implode(', ', $allNames) : 'Data tidak tersedia' }}" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="surat_keterangan_selesai" class="form-label">Surat Keterangan Selesai Magang <span class="text-danger">*</span></label>

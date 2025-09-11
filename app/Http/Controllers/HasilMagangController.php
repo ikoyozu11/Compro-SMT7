@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\Models\HasilMagang;
 use App\Models\Penerimaan;
 use Carbon\Carbon;
@@ -25,6 +26,7 @@ class HasilMagangController extends Controller
 
         return view('admin.hasil', compact('hasilMagang', 'pendingPenerimaan'));
     }
+
 
     public function store(Request $request)
     {
@@ -117,5 +119,106 @@ class HasilMagangController extends Controller
         $hasilMagang->delete();
 
         return redirect()->route('admin.hasil')->with('success', 'Data hasil magang berhasil dihapus.');
+    }
+
+    // Methods for magang users
+    public function magangIndex()
+    {
+        $user = Auth::user();
+        
+        // Find penerimaan record by matching user's phone number with pengajuan data
+        $penerimaan = Penerimaan::whereHas('pengajuan', function($query) use ($user) {
+            $query->where('no_hp', $user->phone)
+                  ->orWhere('nama_pemohon', $user->name);
+        })->with(['pengajuan', 'lokasi', 'hasilMagang'])->first();
+
+        if (!$penerimaan) {
+            return view('magang.hasil-magang', compact('penerimaan'))
+                ->with('error', 'Anda belum memiliki data penerimaan magang.');
+        }
+
+        return view('magang.hasil-magang', compact('penerimaan'));
+    }
+
+    public function magangStore(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Get penerimaan record for this user
+        $penerimaan = Penerimaan::whereHas('pengajuan', function($query) use ($user) {
+            $query->where('no_hp', $user->phone)
+                  ->orWhere('nama_pemohon', $user->name);
+        })->first();
+
+        if (!$penerimaan) {
+            return back()->with('error', 'Anda belum memiliki data penerimaan magang.');
+        }
+
+        // Check if user already has hasil magang
+        if ($penerimaan->hasilMagang) {
+            return back()->with('error', 'Anda sudah mengupload laporan hasil magang.');
+        }
+
+        $request->validate([
+            'laporan_hasil_magang' => 'required|file|mimes:pdf|max:10240', // 10MB max
+            'catatan' => 'nullable|string',
+        ]);
+
+        $data = [
+            'penerimaan_id' => $penerimaan->id,
+            'catatan' => $request->catatan,
+            'status' => 'pending',
+            'tanggal_selesai' => now(),
+        ];
+
+        // Handle file upload
+        if ($request->hasFile('laporan_hasil_magang')) {
+            $data['laporan_hasil_magang'] = $request->file('laporan_hasil_magang')->store('laporan_hasil_magang', 'public');
+        }
+
+        HasilMagang::create($data);
+
+        return redirect()->route('mg.hasil')->with('success', 'Laporan hasil magang berhasil diupload.');
+    }
+
+    public function magangUploadSuratKeterangan(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Get penerimaan record for this user
+        $penerimaan = Penerimaan::whereHas('pengajuan', function($query) use ($user) {
+            $query->where('no_hp', $user->phone)
+                  ->orWhere('nama_pemohon', $user->name);
+        })->with('hasilMagang')->first();
+
+        if (!$penerimaan || !$penerimaan->hasilMagang) {
+            return back()->with('error', 'Anda belum mengupload laporan hasil magang.');
+        }
+
+        $request->validate([
+            'surat_keterangan_selesai' => 'required|file|mimes:pdf|max:2048', // 2MB max
+            'catatan' => 'nullable|string',
+        ]);
+
+        $hasilMagang = $penerimaan->hasilMagang;
+
+        $data = [
+            'catatan' => $request->catatan,
+            'status' => 'completed',
+            'tanggal_selesai' => now(),
+        ];
+
+        // Handle file upload
+        if ($request->hasFile('surat_keterangan_selesai')) {
+            // Delete old file if exists
+            if ($hasilMagang->surat_keterangan_selesai) {
+                Storage::disk('public')->delete($hasilMagang->surat_keterangan_selesai);
+            }
+            $data['surat_keterangan_selesai'] = $request->file('surat_keterangan_selesai')->store('surat_keterangan_selesai', 'public');
+        }
+
+        $hasilMagang->update($data);
+
+        return redirect()->route('mg.hasil')->with('success', 'Surat keterangan selesai magang berhasil diupload.');
     }
 }

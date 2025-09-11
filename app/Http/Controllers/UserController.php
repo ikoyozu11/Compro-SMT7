@@ -15,7 +15,7 @@ class UserController extends Controller
         }
         // Validate the incoming request data
         $validatedData = $request->validate([
-            'username' => 'required|string',
+            'username' => 'required|string|unique:users,username',
             'password' => [
                 'required',
                 'string',
@@ -35,6 +35,7 @@ class UserController extends Controller
             'role' => 'required|in:admin,magang'
         ], [
             'username.required' => 'Username tidak boleh kosong',
+            'username.unique' => 'Username sudah digunakan, silakan pilih username lain',
             'password.required' => 'Password tidak boleh kosong',
             'password.min' => 'Password minimal 6 karakter',
             'password.regex' => 'Password harus memiliki minimal satu huruf, satu angka, dan satu simbol',
@@ -86,7 +87,7 @@ class UserController extends Controller
             abort(403);
         }
         $validationRules = [
-            'username' => 'required|string',
+            'username' => 'required|string|unique:users,username,' . $id,
             'name' => 'required|string',
             'phone' => [
                 'nullable',
@@ -100,6 +101,7 @@ class UserController extends Controller
 
         $validationMessages = [
             'username.required' => 'Username tidak boleh kosong',
+            'username.unique' => 'Username sudah digunakan, silakan pilih username lain',
             'name.required' => 'Nama tidak boleh kosong',
             'phone.regex' => 'Nomor telepon hanya boleh berisi angka',
             'phone.min' => 'Nomor telepon minimal 11 digit',
