@@ -137,34 +137,23 @@
     @else
         <script>
             (function(){
-                const ctx = document.getElementById('server-time-context');
-                if(!ctx) return;
-                const serverOffset = ctx.getAttribute('data-tz') || '+07:00';
-                const today = ctx.getAttribute('data-today');
-
-                function toLocal(dateStr, timeStr){
-                    // Expect dateStr: YYYY-MM-DD, timeStr: HH:mm:ss (server tz)
-                    const iso = `${dateStr}T${timeStr}${serverOffset}`; // e.g., 2025-10-06T13:20:49+07:00
-                    const d = new Date(iso);
-                    // Format as HH:mm:ss in user's locale
-                    const pad = n => String(n).padStart(2,'0');
-                    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-                }
-
-                // Today cards
+                // Times are already in WIB timezone from the backend, so display them as-is
+                // No timezone conversion needed
+                
+                // Today cards - display time directly
                 document.querySelectorAll('.localize-time-today').forEach(el=>{
                     const t = el.getAttribute('data-time');
-                    const d = el.getAttribute('data-date') || today;
                     if(!t) return;
-                    el.textContent = toLocal(d, t);
+                    // Display the time as-is (already in WIB)
+                    el.textContent = t;
                 });
 
-                // History table rows
+                // History table rows - display time directly
                 document.querySelectorAll('.localize-time-row').forEach(el=>{
                     const t = el.getAttribute('data-time');
-                    const d = el.getAttribute('data-date');
-                    if(!t || !d) return;
-                    el.textContent = toLocal(d, t);
+                    if(!t) return;
+                    // Display the time as-is (already in WIB)
+                    el.textContent = t;
                 });
             })();
         </script>

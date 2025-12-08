@@ -19,10 +19,4 @@ class Absensi extends Model
     protected $casts = [
         'time' => 'datetime',
     ];
-
-    // Accessor to automatically convert time to WIB
-    public function getTimeAttribute($value)
-    {
-        return Carbon::parse($value)->setTimezone('Asia/Jakarta');
-    }
 }
