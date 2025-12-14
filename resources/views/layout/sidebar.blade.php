@@ -104,16 +104,7 @@
                                     <span>Hasil Magang</span>
                                 </a>
                             </li>
-                            <li class="sidebar-item has-sub">
-                                <a href="#" class='sidebar-link'>
-                                    <i class="bi bi-journal-text"></i>
-                                    <span>Penelitian</span>
-                                </a>
-                                <ul class="submenu">
-                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.link') }}">Kelola Form Link Penelitian</a></li>
-                                    <li class="submenu-item"><a href="{{ route('admin.penelitian.index') }}">Daftar Penelitian</a></li>
-                                </ul>
-                            </li>
+
                         @endif
 
 
