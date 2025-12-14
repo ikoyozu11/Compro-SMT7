@@ -14,12 +14,9 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Get today's attendance using Eloquent for proper timezone handling
-        $todayStart = now('Asia/Jakarta')->startOfDay()->utc();
-        $todayEnd = now('Asia/Jakarta')->endOfDay()->utc();
-        
+        // Get today's attendance using MySQL server local date to match TIMESTAMP behavior
         $absensiTodayRecords = Absensi::where('user_id', $userId)
-            ->whereBetween('time', [$todayStart, $todayEnd])
+            ->whereRaw("DATE(time) = CURDATE()")
             ->orderBy('time', 'asc')
             ->get();
 
@@ -28,7 +25,7 @@ class AbsensiController extends Controller
         if ($absensiTodayRecords->count() > 0) {
             $absensiToday->count_absen = $absensiTodayRecords->count();
             $firstRecord = $absensiTodayRecords->first();
-            // Convert from UTC (database) to WIB for display
+            // Convert to WIB for display
             $absensiToday->masuk = $firstRecord->time->setTimezone('Asia/Jakarta')->format('H:i:s');
             
             if ($absensiTodayRecords->count() > 1) {
@@ -42,7 +39,7 @@ class AbsensiController extends Controller
                     ->limit(10)
                     ->get()
                     ->map(function($absen) {
-                        // Convert from UTC (database) to WIB for display
+                        // Convert to WIB for display
                         $timeWib = $absen->time->setTimezone('Asia/Jakarta');
                         return (object) [
                             'id' => $absen->id,
@@ -58,9 +55,9 @@ class AbsensiController extends Controller
             $date = $timeWib->format('Y-m-d');
             
             // Count attendance for this date to determine if it's check-in or check-out
-            // Use UTC range for the date in WIB
-            $dateStart = \Carbon\Carbon::createFromFormat('Y-m-d', $date, 'Asia/Jakarta')->startOfDay()->utc();
-            $dateEnd = \Carbon\Carbon::createFromFormat('Y-m-d', $date, 'Asia/Jakarta')->endOfDay()->utc();
+            // Use Asia/Jakarta local day range
+            $dateStart = \Carbon\Carbon::createFromFormat('Y-m-d', $date, 'Asia/Jakarta')->startOfDay();
+            $dateEnd = \Carbon\Carbon::createFromFormat('Y-m-d', $date, 'Asia/Jakarta')->endOfDay();
             $attendanceCount = Absensi::where('user_id', $userId)
                                     ->whereBetween('time', [$dateStart, $dateEnd])
                                     ->where('id', '<=', $absen->id)
@@ -106,11 +103,9 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Check if user already has check-in today
-        $todayStart = now('Asia/Jakarta')->startOfDay()->utc();
-        $todayEnd = now('Asia/Jakarta')->endOfDay()->utc();
+        // Check if user already has check-in today (server local date)
         $existingAbsen = Absensi::where('user_id', $userId)
-                                ->whereBetween('time', [$todayStart, $todayEnd])
+                                ->whereRaw("DATE(time) = CURDATE()")
                                 ->first();
 
         if ($existingAbsen) {
@@ -131,11 +126,9 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Check if user has check-in today
-        $todayStart = now('Asia/Jakarta')->startOfDay()->utc();
-        $todayEnd = now('Asia/Jakarta')->endOfDay()->utc();
+        // Check if user has check-in today (server local date)
         $absenMasuk = Absensi::where('user_id', $userId)
-                             ->whereBetween('time', [$todayStart, $todayEnd])
+                             ->whereRaw("DATE(time) = CURDATE()")
                              ->first();
 
         if (!$absenMasuk) {
@@ -145,7 +138,7 @@ class AbsensiController extends Controller
 
         // Check if user already has multiple entries (already checked out)
         $absenCount = Absensi::where('user_id', $userId)
-                             ->whereBetween('time', [$todayStart, $todayEnd])
+                             ->whereRaw("DATE(time) = CURDATE()")
                              ->count();
 
         if ($absenCount >= 2) {
