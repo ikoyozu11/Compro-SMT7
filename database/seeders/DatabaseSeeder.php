@@ -34,11 +34,5 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Jalankan seeder lainnya
-        $this->call([
-            PengajuanPenelitianSeeder::class,
-            LokasiSeeder::class,
-            PengajuanMagangSeeder::class,
-        ]);
     }
 }

@@ -11,10 +11,10 @@ class PengajuanMagangSeeder extends Seeder
     {
         DB::table('pengajuan_magang')->insert([
             [
-                'nama' => 'Rizky Maulana',
+                'nama_pemohon' => 'Rizky Maulana',
                 'email' => 'rizky@example.com',
-                'no_telp' => '081234567890',
-                'instansi' => 'Universitas Indonesia',
+                'no_hp' => '081234567890',
+                'asal_instansi' => 'Universitas Indonesia',
                 'jurusan' => 'Teknik Informatika',
                 'status' => 'pending',
                 'file_surat' => null,
@@ -22,10 +22,10 @@ class PengajuanMagangSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama' => 'Siti Aminah',
+                'nama_pemohon' => 'Siti Aminah',
                 'email' => 'siti@example.com',
-                'no_telp' => '082134567891',
-                'instansi' => 'Universitas Gadjah Mada',
+                'no_hp' => '082134567891',
+                'asal_instansi' => 'Universitas Gadjah Mada',
                 'jurusan' => 'Sistem Informasi',
                 'status' => 'diterima',
                 'file_surat' => null,
