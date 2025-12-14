@@ -2,7 +2,6 @@
 @section('title', isset($lokasi) ? 'Edit Lokasi' : 'Tambah Lokasi')
 @section('content')
 <div class="container">
-    <h2>{{ isset($lokasi) ? 'Edit Lokasi' : 'Tambah Lokasi' }}</h2>
     <form method="POST" action="{{ isset($lokasi) ? route('admin.master.lokasi.update', $lokasi->id) : route('admin.master.lokasi.store') }}">
         @csrf
         @if(isset($lokasi))

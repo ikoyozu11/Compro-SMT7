@@ -5,7 +5,7 @@
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Buat Form Link Magang</h3>
+                
                 <p class="text-subtitle text-muted">Buat form link baru untuk pengajuan magang</p>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
@@ -23,9 +23,7 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Buat Form Link Magang</h4>
-                </div>
+                <div class="card-header"></div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('admin.form_links.store') }}">
                         @csrf

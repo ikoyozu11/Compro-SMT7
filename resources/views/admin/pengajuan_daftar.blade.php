@@ -15,7 +15,6 @@
     }
 </style>
 <div class="container">
-    <h2>Daftar Pengajuan Magang</h2>
     <p class="text-muted mb-4">Kelola status pengajuan magang - aplikasi akan tetap di halaman ini sampai status 'Diterima'</p>
     
 

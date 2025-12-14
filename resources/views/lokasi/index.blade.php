@@ -2,7 +2,6 @@
 @section('title', 'Lokasi Magang')
 @section('content')
 <div class="container">
-    <h2>Lokasi Magang</h2>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
