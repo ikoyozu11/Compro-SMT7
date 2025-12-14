@@ -14,11 +14,20 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Get today's attendance using MySQL server local date to match TIMESTAMP behavior
-        $absensiTodayRecords = Absensi::where('user_id', $userId)
-            ->whereRaw("DATE(time) = CURDATE()")
-            ->orderBy('time', 'asc')
-            ->get();
+        // Get today's attendance; use driver-specific logic (SQLite lacks CURDATE())
+        if (\DB::connection()->getDriverName() === 'sqlite') {
+            $start = now('Asia/Jakarta')->startOfDay();
+            $end = now('Asia/Jakarta')->endOfDay();
+            $absensiTodayRecords = Absensi::where('user_id', $userId)
+                ->whereBetween('time', [$start, $end])
+                ->orderBy('time', 'asc')
+                ->get();
+        } else {
+            $absensiTodayRecords = Absensi::where('user_id', $userId)
+                ->whereRaw("DATE(time) = CURDATE()")
+                ->orderBy('time', 'asc')
+                ->get();
+        }
 
         $absensiToday = (object) ['masuk' => null, 'pulang' => null, 'count_absen' => 0];
         
@@ -103,10 +112,18 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Check if user already has check-in today (server local date)
-        $existingAbsen = Absensi::where('user_id', $userId)
-                                ->whereRaw("DATE(time) = CURDATE()")
-                                ->first();
+        // Check if user already has check-in today
+        if (\DB::connection()->getDriverName() === 'sqlite') {
+            $start = now('Asia/Jakarta')->startOfDay();
+            $end = now('Asia/Jakarta')->endOfDay();
+            $existingAbsen = Absensi::where('user_id', $userId)
+                                    ->whereBetween('time', [$start, $end])
+                                    ->first();
+        } else {
+            $existingAbsen = Absensi::where('user_id', $userId)
+                                    ->whereRaw("DATE(time) = CURDATE()")
+                                    ->first();
+        }
 
         if ($existingAbsen) {
             session()->flash('error', 'Anda sudah melakukan absen masuk hari ini.');
@@ -126,10 +143,18 @@ class AbsensiController extends Controller
     {
         $userId = (Auth::user())->id;
 
-        // Check if user has check-in today (server local date)
-        $absenMasuk = Absensi::where('user_id', $userId)
-                             ->whereRaw("DATE(time) = CURDATE()")
-                             ->first();
+        // Check if user has check-in today
+        if (\DB::connection()->getDriverName() === 'sqlite') {
+            $start = now('Asia/Jakarta')->startOfDay();
+            $end = now('Asia/Jakarta')->endOfDay();
+            $absenMasuk = Absensi::where('user_id', $userId)
+                                 ->whereBetween('time', [$start, $end])
+                                 ->first();
+        } else {
+            $absenMasuk = Absensi::where('user_id', $userId)
+                                 ->whereRaw("DATE(time) = CURDATE()")
+                                 ->first();
+        }
 
         if (!$absenMasuk) {
             session()->flash('error', 'Anda belum melakukan absen masuk hari ini.');
@@ -137,9 +162,17 @@ class AbsensiController extends Controller
         }
 
         // Check if user already has multiple entries (already checked out)
-        $absenCount = Absensi::where('user_id', $userId)
-                             ->whereRaw("DATE(time) = CURDATE()")
-                             ->count();
+        if (\DB::connection()->getDriverName() === 'sqlite') {
+            $start = now('Asia/Jakarta')->startOfDay();
+            $end = now('Asia/Jakarta')->endOfDay();
+            $absenCount = Absensi::where('user_id', $userId)
+                                 ->whereBetween('time', [$start, $end])
+                                 ->count();
+        } else {
+            $absenCount = Absensi::where('user_id', $userId)
+                                 ->whereRaw("DATE(time) = CURDATE()")
+                                 ->count();
+        }
 
         if ($absenCount >= 2) {
             session()->flash('error', 'Anda sudah melakukan absen pulang hari ini.');
