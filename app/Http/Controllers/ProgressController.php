@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use App\Models\Progress;
 
 class ProgressController extends Controller
@@ -53,6 +54,8 @@ class ProgressController extends Controller
             }
         } catch (\Illuminate\Http\Exceptions\PostTooLargeException $e) {
             session()->flash('error', 'File terlalu besar. Maksimal ukuran file adalah 2MB.');
+        } catch (ValidationException $e) {
+            throw $e; // biarkan Laravel menangani redirect dengan error bag
         } catch (\Exception $e) {
             session()->flash('error', 'Terjadi kesalahan saat mengupload file: ' . $e->getMessage());
         }
