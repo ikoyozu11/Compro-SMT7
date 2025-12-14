@@ -245,51 +245,91 @@ class AbsensiController extends Controller
         $data = [];
 
         if(!empty($dateStart) && !empty($dateEnd)){
-            // Generate date range and get attendance data
-            $query = "
-            WITH RECURSIVE DateRange AS (
-                SELECT '".$dateStart."' AS date
-                UNION ALL
-                SELECT date + INTERVAL 1 DAY
-                FROM DateRange
-                WHERE date < '".$dateEnd."'
-            )
-            SELECT 
-                cal.date as tgl,
-                absen_summary.masuk,
-                absen_summary.pulang,
-                absen_summary.terlambat,
-                absen_summary.cepat_pulang,
-                absen_summary.keterangan
-            FROM DateRange cal
-            LEFT JOIN (
-                SELECT 
-                    DATE(CONVERT_TZ(time, '+00:00', '+07:00')) as tgl_absen,
-                    DATE_FORMAT(CONVERT_TZ(MIN(time), '+00:00', '+07:00'), '%H:%i:%s') as masuk,
-                    CASE 
-                        WHEN COUNT(*) > 1 THEN DATE_FORMAT(CONVERT_TZ(MAX(time), '+00:00', '+07:00'), '%H:%i:%s')
-                        ELSE NULL 
-                    END as pulang,
-                    CASE 
-                        WHEN TIME(CONVERT_TZ(MIN(time), '+00:00', '+07:00')) >= '08:00:00' THEN 'Ya'
-                        ELSE 'Tidak'
-                    END as terlambat,
-                    CASE 
-                        WHEN COUNT(*) > 1 AND TIME(CONVERT_TZ(MAX(time), '+00:00', '+07:00')) < '16:00:00' THEN 'Ya'
-                        ELSE 'Tidak'
-                    END as cepat_pulang,
-                    CASE 
-                        WHEN COUNT(*) = 0 THEN 'Tidak Hadir'
-                        WHEN COUNT(*) = 1 THEN 'Belum Pulang'
-                        ELSE 'Hadir'
-                    END as keterangan
-                FROM absensi 
-                WHERE user_id = ".$userId."
-                GROUP BY DATE(CONVERT_TZ(time, '+00:00', '+07:00'))
-            ) absen_summary ON cal.date = absen_summary.tgl_absen
-            ORDER BY cal.date ASC";
+            if (\DB::connection()->getDriverName() === 'sqlite') {
+                // Build recap per day using Eloquent (no MySQL-specific functions)
+                $start = \Carbon\Carbon::parse($dateStart, 'Asia/Jakarta')->startOfDay();
+                $end = \Carbon\Carbon::parse($dateEnd, 'Asia/Jakarta')->endOfDay();
+                $period = new \Carbon\CarbonPeriod($start, '1 day', $end);
 
-            $data = DB::select($query);
+                foreach ($period as $day) {
+                    $dayStart = $day->copy()->startOfDay();
+                    $dayEnd = $day->copy()->endOfDay();
+                    $records = Absensi::where('user_id', $userId)
+                                ->whereBetween('time', [$dayStart, $dayEnd])
+                                ->orderBy('time', 'asc')
+                                ->get();
+
+                    $masuk = null; $pulang = null; $terlambat = 'Tidak'; $cepat = 'Tidak'; $ket = 'Tidak Hadir';
+                    if ($records->count() > 0) {
+                        $first = $records->first()->time->setTimezone('Asia/Jakarta');
+                        $masuk = $first->format('H:i:s');
+                        $terlambat = ($first->hour >= 8) ? 'Ya' : 'Tidak';
+                        if ($records->count() > 1) {
+                            $last = $records->last()->time->setTimezone('Asia/Jakarta');
+                            $pulang = $last->format('H:i:s');
+                            $cepat = ($last->hour < 16) ? 'Ya' : 'Tidak';
+                            $ket = 'Hadir';
+                        } else {
+                            $ket = 'Belum Pulang';
+                        }
+                    }
+
+                    $data[] = (object) [
+                        'tgl' => $day->format('Y-m-d'),
+                        'masuk' => $masuk,
+                        'pulang' => $pulang,
+                        'terlambat' => $terlambat,
+                        'cepat_pulang' => $cepat,
+                        'keterangan' => $ket,
+                    ];
+                }
+            } else {
+                // MySQL optimized recap query
+                $query = "
+                WITH RECURSIVE DateRange AS (
+                    SELECT '".$dateStart."' AS date
+                    UNION ALL
+                    SELECT date + INTERVAL 1 DAY
+                    FROM DateRange
+                    WHERE date < '".$dateEnd."'
+                )
+                SELECT 
+                    cal.date as tgl,
+                    absen_summary.masuk,
+                    absen_summary.pulang,
+                    absen_summary.terlambat,
+                    absen_summary.cepat_pulang,
+                    absen_summary.keterangan
+                FROM DateRange cal
+                LEFT JOIN (
+                    SELECT 
+                        DATE(CONVERT_TZ(time, '+00:00', '+07:00')) as tgl_absen,
+                        DATE_FORMAT(CONVERT_TZ(MIN(time), '+00:00', '+07:00'), '%H:%i:%s') as masuk,
+                        CASE 
+                            WHEN COUNT(*) > 1 THEN DATE_FORMAT(CONVERT_TZ(MAX(time), '+00:00', '+07:00'), '%H:%i:%s')
+                            ELSE NULL 
+                        END as pulang,
+                        CASE 
+                            WHEN TIME(CONVERT_TZ(MIN(time), '+00:00', '+07:00')) >= '08:00:00' THEN 'Ya'
+                            ELSE 'Tidak'
+                        END as terlambat,
+                        CASE 
+                            WHEN COUNT(*) > 1 AND TIME(CONVERT_TZ(MAX(time), '+00:00', '+07:00')) < '16:00:00' THEN 'Ya'
+                            ELSE 'Tidak'
+                        END as cepat_pulang,
+                        CASE 
+                            WHEN COUNT(*) = 0 THEN 'Tidak Hadir'
+                            WHEN COUNT(*) = 1 THEN 'Belum Pulang'
+                            ELSE 'Hadir'
+                        END as keterangan
+                    FROM absensi 
+                    WHERE user_id = ".$userId."
+                    GROUP BY DATE(CONVERT_TZ(time, '+00:00', '+07:00'))
+                ) absen_summary ON cal.date = absen_summary.tgl_absen
+                ORDER BY cal.date ASC";
+
+                $data = DB::select($query);
+            }
         }
         
         return view('absensi-recap', ['data'=>$data]);

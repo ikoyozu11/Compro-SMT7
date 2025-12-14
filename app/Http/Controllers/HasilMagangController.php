@@ -131,10 +131,16 @@ class HasilMagangController extends Controller
                 $q->whereHas('pengajuan', function($query) use ($user) {
                     $query->where('no_hp', $user->phone)
                           ->orWhere('nama_pemohon', $user->name);
-                })
-                // Match inside peserta_magang JSON by phone or name (any occurrence)
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                });
+                if (\DB::connection()->getDriverName() === 'sqlite') {
+                    // Fallback: search JSON text with LIKE for SQLite
+                    $q->orWhere('peserta_magang', 'like', '%'.($user->phone ?? '').'%')
+                      ->orWhere('peserta_magang', 'like', '%'.($user->name ?? '').'%');
+                } else {
+                    // MySQL JSON search
+                    $q->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
+                      ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                }
             })
             ->with(['pengajuan', 'lokasi', 'hasilMagang'])
             ->first();
@@ -156,9 +162,14 @@ class HasilMagangController extends Controller
                 $q->whereHas('pengajuan', function($query) use ($user) {
                     $query->where('no_hp', $user->phone)
                           ->orWhere('nama_pemohon', $user->name);
-                })
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                });
+                if (\DB::connection()->getDriverName() === 'sqlite') {
+                    $q->orWhere('peserta_magang', 'like', '%'.($user->phone ?? '').'%')
+                      ->orWhere('peserta_magang', 'like', '%'.($user->name ?? '').'%');
+                } else {
+                    $q->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
+                      ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                }
             })
             ->first();
 
@@ -202,9 +213,14 @@ class HasilMagangController extends Controller
                 $q->whereHas('pengajuan', function($query) use ($user) {
                     $query->where('no_hp', $user->phone)
                           ->orWhere('nama_pemohon', $user->name);
-                })
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
-                ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                });
+                if (\DB::connection()->getDriverName() === 'sqlite') {
+                    $q->orWhere('peserta_magang', 'like', '%'.($user->phone ?? '').'%')
+                      ->orWhere('peserta_magang', 'like', '%'.($user->name ?? '').'%');
+                } else {
+                    $q->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->phone])
+                      ->orWhereRaw("JSON_SEARCH(peserta_magang, 'one', ?) IS NOT NULL", [$user->name]);
+                }
             })
             ->with('hasilMagang')
             ->first();
